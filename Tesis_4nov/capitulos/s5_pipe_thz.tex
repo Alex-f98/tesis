@@ -1,0 +1,253 @@
+
+\section{Resumen}
+
+El objetivo de este experimento es poder indetificar el coficiente de freflexion de una pastilla con seccion circular y de ancho presuntamente fijo.
+
+Para ello se propone irradiar un area cuadrada delimitada por un "hierro" en el cual se pone una pantilla con un determinado indice de refracción, luego se define una grilla de posibles posiciones de donde se van a irradiar una señal $s(t)$ a dicha pastilla verticalmente, de forma de recuperar la señal original con una amplitud distinta y un corrimiento temporal debido al tiempo de vuelo de la señal (Ver Fig. \ref{fig:pastilla_transparente}).
+
+Es de particular interes la fase de la señal recuperada dado que este es quien nos dará información sobre el material a analizar a traves de su indice de refracción.
+
+Para ello se utiliza un \textit{chirp pulse} que tiene la particularidad de tenes una fase cuadratica tal que la relación frecuencia-tiempo es lineal, lo cual nos permite variar la frecuencia con el tiempo y de esa manera poder determinar frecuencias de interes facilmente.
+
+\section{Física del problema}
+
+
+\begin{figure}[H]
+    \centering
+        \resizebox{1.04\textwidth}{!}{%
+            \input{img_tex/digrama_pastilla.tex}%
+        }
+        \caption{Representación en perspectiva del paso de ondas senoidales a través del volumen de la pastilla, con transparencia.}
+    \label{fig:pastilla_transparente}
+\end{figure}
+
+
+\begin{figure}[H]
+    \centering
+    \resizebox{1.04\textwidth}{!}{%
+        \input{img_tex/diagrama_chirp.tex}%
+    }
+    \caption{Relacion fase-frecuencia con tiempo de rampa $\tau$.}
+    \label{fig:chirp_fig}
+\end{figure}
+Se define el \textit{pulso chirp} $s(t)$, cuya fase $\varphi(t)$ es una función dependiente del tiempo.
+
+Lo interesante de esta fase es que, al derivarla, se observa una relación lineal entre la frecuencia instantánea y el tiempo:
+
+\begin{equation}
+    f_i(t) = f_0 + \frac{\beta}{\tau} t \quad \text{para } 0 < t < \tau
+\end{equation}
+
+donde $f_0$ y $\frac{\beta}{\tau}$ son constantes positivas, tal que.
+\begin{itemize}
+    \item $\beta$ es el ancho de banda.
+    \item $f_0$ frecuencia de portadora.
+    \item $\tau$ tiempo de rampa.
+    \item $\frac{\beta}{\tau}$ \textit{chirp rate} (tasa de barrido)
+
+\end{itemize}
+
+Para hallar la expresión de la fase, se plantea la relación entre la frecuencia instantánea y la fase:
+
+\begin{equation}
+    f_i(t) = \frac{1}{2\pi} \frac{\partial \varphi(t)}{\partial t}
+\end{equation}
+
+Para el dominio temporal $t \in [0, \tau]$, integramos la frecuencia instantánea respecto al tiempo:
+
+\begin{equation}
+    \begin{aligned}
+        \varphi(t) &= \int 2\pi f_i(t) \, dt \\
+        \varphi(t) &= \int 2\pi \left[ f_0 + \frac{\beta}{\tau} t \right] dt \\
+        \varphi(t) &= \frac{\pi\beta}{\tau} t^{2} + 2\pi f_0 t + C
+    \end{aligned}
+\end{equation}
+
+
+Por lo tanto, la fase que define al \textit{chirp} es $\varphi(t) = \frac{\pi\beta}{\tau} t^{2} + 2\pi f_0 t + C$, por lo que el \textit{pulso chirp} resulta:
+
+\begin{equation}
+    \begin{aligned}
+        s(t) &= a_0 e^{j\varphi(t)} \\
+        &= a_0 e^{j \left( \frac{\pi\beta}{\tau} t^{2} + 2\pi f_0 t + C \right)} \\
+        &= \overbrace{a_0 e^{jC}}^{a_1} e^{j \left( \frac{\pi\beta}{\tau} t^{2} + 2\pi f_0 t \right)} \\
+        &= a_1 e^{j \left( \frac{\pi\beta}{\tau} t^{2} + 2\pi f_0 t \right)}
+    \end{aligned}
+\end{equation}
+
+La señal recibida es proporcional a la señal transmitida $s(t)$. Dado que la onda debe recorrer una distancia $d$ de ida y vuelta hacia el objeto de interés, el receptor captura una réplica escalada y retrasada temporalmente $k s(t - t_0)$. Además, esta señal se ve afectada por ruido de diversas fuentes (como el ruido térmico del ADC), el cual se modela mediante el término $\epsilon(t)$.
+
+Finalmente, la señal recibida se expresa como:
+
+\begin{equation}
+    \Gamma(t) = k s(t - t_0) + \epsilon(t) \quad \text{donde } t_0 = \frac{2d}{c} \quad \text{y } \epsilon(t) \text{ es el ruido.}
+\end{equation}
+
+En donde se propone la siguiente señal demoduladora para recuperar la señal.
+
+\begin{equation}
+    s_{dem} = e^{-j \left( \frac{\pi\beta}{\tau} t^{2} + 2\pi f_0 t \right)}
+\end{equation}
+
+de esta manera las frecuencias que obtenemos nos quedan constantes.
+
+\begin{equation}
+    \begin{aligned}
+        s_{rec} &= ks(t-t_0).s_{dem}\\
+        &= k e^{j \left( \frac{\pi\beta}{\tau} (t-t_0)^{2} + 2\pi f_0 (t-t_0) \right)} e^{-j \left( \frac{\pi\beta}{\tau} t^{2} + 2\pi f_0 t \right)}\\
+        &= k e^{j \left( \frac{\pi\beta}{\tau} [t^{2}+t_0^{2} -2tt_0] + 2\pi f_0 (t-t_0) \right)} e^{-j \left( \frac{\pi\beta}{\tau} t^{2} + 2\pi f_0 t \right)}\\
+         &= k e^{j \left( \frac{\pi\beta}{\tau} [t_0^{2} -2tt_0] - 2\pi f_0 t_0 \right)}\\
+         &= k e^{j \left( \frac{\pi\beta}{\tau} t_0^{2} - 2\pi f_0 t_0 \right)} \underbrace{e^{j\frac{\pi \beta}{\tau}2t_0 t}}_{sinoide}
+    \end{aligned}
+\end{equation}
+
+Entonces, si miro la parte real de señal recuperada (demodulada) $s_{rec}$ es una senoide ponderada por una aplitud dependiente de la amplitud inicial se la señal original y $k$ siendo este el factor de  escalamiento de la señal reflejada.
+
+\section{Obtención de frecuencias de interés}
+
+Los datos son obtenidos mediante un \textbf{ADC} el cual devuelve un array con los valores en fase y cuadratura $I$, $Q$ consecutivamente en un solo canal.
+
+%\begin{equation}
+%\text{adc\_signal} = \left[ I_0,\, Q_0,\, I_1,\, Q_1,\, \ldots,\, I_n,\, Q_n \right]
+%\end{equation}
+
+
+\begin{figure}[H]
+    \centering
+    \resizebox{1.0\textwidth}{!}{%
+        \input{img_tex/freq_iq}%
+    }
+    \caption{Pipeline preprocesamiento de IQ.}
+    \label{fig:freq_iq}
+\end{figure}
+
+
+\begin{figure}[H]
+    \centering
+    \resizebox{1.0\textwidth}{!}{%
+        \input{img_tex/cal_peaks}%
+    }
+    \caption{Pipeline, calculo de picos de frecuencia.}
+    \label{fig:calc_peaks}
+\end{figure}
+
+
+
+Los datos se obtienen en una ventana temporal a la cual se le resta su valor medio para restar el valor de continua y evitar cortes por rango dinamico; posteriormente, se le aplica una ventana $W$ en el dominio del tiempo.
+A continuación, se calcula la Transformada de Fourier para aplicar, en dicho dominio, un desfase u \textit{offset} en la componente en cuadratura ($Q$).
+Finalmente, se reconstruye la señal en el dominio espectral para obtener $S(\omega) = \mathcal{I} + j\mathcal{Q}$, junto con su módulo y su nueva frecuencia de muestreo.
+
+Como se ve en la Figura~\ref{fig:pastilla_transparente}, las frecuencias $f_1$ y $f_2$ están asociadas a los cambios en el medio irradiado. Por ello, resulta de interés caracterizar ambos picos de frecuencia ante la presencia de un objeto de análisis; en este caso, una muestra (pastilla) presuntamente con el mismo coeficiente de reflexión.
+
+Para su obtención se sigue el flujo de procesamiento presentado en la Figura~\ref{fig:calc_peaks}. Primero, se convierten los valores a decibeles y se les resta su media para restar el ruido convolucional, este  es un piso de ruido debido a multiples fuentes (ej: ruido termico, cuantización de ADC, etc).
+Seguidamente, se aplica el algoritmo \texttt{findPeaks}, el cual detecta los máximos locales a partir de las muestras disponibles. Luego, los datos se procesan mediante una interpolación de segundo orden sobre 3 puntos, mejorando así la estimación del pico máximo.
+
+A partir de este procedimiento se obtienen las frecuencias, módulos e índices correspondientes, los cuales se ingresan a un algoritmo que los convierte en índices de refracción utilizados para caracterizar el material. Cabe señalar que, previamente, la primera frecuencia permite aplicar una máscara para filtrar el objeto de interés.
+\paragraph{Corrección de \textbf{Q}}
+
+La obtención de la fase y cuadratura no es perfecta; es necesaria una corrección de \(Q\) debido a que presenta un retardo (\textit{delay}) respecto a \(I\). El mismo puede configurarse manualmente mediante un \textit{offset} o se puede calcular maximizando la energía positiva respecto de la energía negativa (correspondiente al ruido).
+
+\begin{figure}[H]
+    \centering
+    \resizebox{0.8\textwidth}{!}{%
+        \input{img_tex/delay_optim}%
+    }
+    \caption{Calibración de \(Q\).}
+    \label{fig:cal_Q}
+\end{figure}
+
+En la Fig.~\ref{fig:cal_Q} se puede observar que el espectro de interés se encuentra en el intervalo \([f_0,\; f_0+\beta]\), pero se lo debe llevar a banda base \([0,\; \beta]\) aplicando un corrimiento en frecuencia, para luego corregir dicho retardo maximizando la energía positiva en banda base y tomando como energía negativa la correspondiente a las frecuencias negativas, las cuales existen debido al ruido presente.
+
+Esto se logra fácilmente realizando un barrido de posibles retardos y seleccionando aquel que maximice la relación \(\frac{E^{+}}{E^{-}}\).
+
+
+\subsection{Obtención de indice de refracción}
+
+Al existir una relación lineal entre el tiempo y la frecuencia, es posible determinar la frecuencia $f_{\text{peak}}$ asociada a cada interfaz u objetivo mediante:
+
+\begin{equation}
+    f_{\text{peak}} = \frac{\beta}{\tau} t_{\text{peak}} = \frac{\beta}{\tau} \frac{2d_{\text{eq}}}{c}
+\end{equation}
+
+Como se observa en la Fig.~\ref{fig:conformal_full_panel}, se obtienen dos picos de frecuencia, $f_1$ y $f_2$. Al calcular el cociente entre ellos:
+
+\begin{equation}
+    \frac{f_2}{f_1} = \frac{\frac{\beta}{\tau} \frac{2 d_{\text{eq}, 2}}{c}}{\frac{\beta}{\tau} \frac{2 d_{\text{eq}, 1}}{c}} = \frac{d_{\text{eq}, 1} + n \cdot \text{espesor}}{d_{\text{eq}, 1}}
+\end{equation}
+
+donde $d_{\text{eq}, 1}$ es la distancia equivalente a la primera cara de la pastilla y $d_{\text{eq}, 2} = d_{\text{eq}, 1} + n \cdot \text{espesor}$ es la distancia equivalente a la segunda cara. El tiempo que tarda la onda en atravesar el material (ida y vuelta) es $\Delta t = \frac{2 \cdot \text{espesor}}{v_{\text{pastilla}}}$, con la velocidad dentro del medio dada por $v_{\text{pastilla}} = \frac{c}{n}$, siendo $n$ el índice de refracción.
+
+A partir de este cociente, se puede despejar el índice de refracción $n$:
+
+\begin{equation}
+    n = \frac{d_{\text{eq}, 1}}{\text{espesor}} \left( \frac{f_2}{f_1} - 1 \right)
+    \label{eq:coef_cociente}
+\end{equation}
+
+Nótese que esta forma de obtener $n$ depende directamente de qué tan bien esté estimado $d_{\text{eq}, 1}$.
+
+Otra opción para obtener el índice de refracción es mediante la diferencia de frecuencias:
+
+\begin{equation}
+    f_2 - f_1 = \frac{\beta}{\tau} \frac{2 d_{\text{eq}, 2}}{c} - \frac{\beta}{\tau} \frac{2 d_{\text{eq}, 1}}{c} = \frac{\beta}{\tau} \frac{2}{c} \left( n \cdot \text{espesor} \right)
+\end{equation}
+
+Despejando $n$, se obtiene:
+
+\begin{equation}
+    n = \frac{(f_2 - f_1) \cdot c}{2 \left( \frac{\beta}{\tau} \right) \cdot \text{espesor}}
+\end{equation}
+
+Nótese que el cálculo del índice de refracción resulta inversamente proporcional al \textit{chirp rate} ($\frac{\beta}{\tau}$) y al espesor de la muestra.
+
+Ademas, estamos asumiento conocido y constante al espesor.
+
+
+\subsection{Segmentación de material via caracterizacion en espectro}
+
+Al final del pipleline de la figura \ref{fig:calc_peaks} se aplican distintos algortimos de segmentación uno de ellos es el siguiente.
+
+\paragraph{Segementacion no supervisada basada en señales}
+
+Para generar la máscara que va a caracterizar el elemento de estudio, en este caso una pastilla, se debe aplicar una máscara que permita separar la pastilla del fondo.
+
+En sí, es un problema de segmentación al cual se lo ataca con teoría de procesamiento de señales.
+
+\begin{figure}[H]
+    \centering
+    \resizebox{0.8\textwidth}{!}{%
+        \input{img_tex/gen_maskv0}%
+    }
+    \caption{Algoritmo de generación de máscara con KNN no supervisado.}
+    \label{fig:maskv0}
+\end{figure}
+
+En la Fig.~\ref{fig:maskv0}, de las señales se obtienen los dos picos máximos, de los cuales solo nos interesan las dos amplitudes y quedarnos con el pico máximo $A_i$, el cual se presume que corresponde a \(f_1\), la frecuencia respectiva al primer rebote.
+
+Luego, se procede a aplicar KNN no supervisado, el cual nos devuelve las distancias (en amplitud) de cada punto respecto a las demás. Con ello se puede calcular una densidad de distancias y así poder trazar un umbral para separar al primer pico que del segundo pico, para mediante eso poder clasificar y así generar la máscara $\mathcal{A}$ tal que es el conjunto de pixeles que conforman la pastilla,quien no pertenecezca a dicho conjunto será fondo..
+
+
+
+\paragraph{Segmentación no supervisada basada en imágenes}
+
+La siguiente solución está basada en la segmentación, en donde las entradas y la salida son imágenes.
+
+La imagen de entrada se obtiene a partir de calcular, para cada píxel, el respectivo coeficiente de refracción, como se ve por ejemplo en la ecuación \eqref{eq:coef_cociente}.
+
+El problema con esto viene dado por la simple estimación de picos mediante \textit{findPeaks}; con ello se obtienen coeficientes \(n\) demasiado ruidosos. Este escenario presenta zonas en donde el objeto está bien definido y también lo está el fondo, pero en los bordes o fronteras entre las dos clases hay demasiado ruido para distinguir el objeto del fondo. Por ello, se opta por \textbf{segmentar texturas}, para lo cual se propone el siguiente pipeline:
+
+\begin{figure}[H]
+    \centering
+    \resizebox{0.8\textwidth}{!}{        \input{img_tex/gen_maskv1_textoon}}
+    \caption{Segmentación mediante filtros de Gabor....}
+    \label{fig:maskv1_gabor}
+\end{figure}
+
+Como se ve en la Fig.~\ref{fig:maskv1_gabor}, la imagen pasa por dos agrupamientos distintos:
+
+\begin{itemize}
+    \item Se le aplican \(M\) filtros de Gabor a la imagen, lo que genera \(M\) nuevas características (\textit{features}) por cada píxel.
+    \item Luego se realiza un agrupamiento con algún algoritmo de \textit{clustering}, por ejemplo K-Means, recuperando así la dimensión original pero con los píxeles agrupados.
+    \item A este nuevo espacio se lo conoce como mapa de \textit{textones}, al cual se le calcula un histograma local tomado a través de una ventana deslizante, obteniendo así un nuevo espacio de histogramas.
+    \item Finalmente, en este nuevo espacio se realiza un segundo agrupamiento con las clases que uno espera obtener; en este caso se utilizó GMM.
+\end{itemize}

@@ -1,0 +1,134 @@
+
+\begin{tikzpicture}[font=\sffamily\small]
+
+    % ==========================================
+    % 1. BLOQUE TEJIDO (TISSUE - PERSPECTIVA 3D)
+    % ==========================================
+    \begin{scope}[shift={(0,0)}]
+        
+        % Capa Amarilla Base (Hipodermis / Grasa)
+        \draw[fill=yellow!30, draw=yellow!60!black, thick] 
+            (-1.5,-1.2) -- (0.5,-1.2) -- (1.5,-0.6) -- (-0.5,-0.6) -- cycle;
+        \draw[fill=yellow!25, draw=yellow!60!black, thick] 
+            (-1.5,-1.2) -- (0.5,-1.2) -- (0.5,-0.8) -- (-1.5,-0.8) -- cycle;
+        \draw[fill=yellow!35, draw=yellow!60!black, thick] 
+            (0.5,-1.2) -- (1.5,-0.6) -- (1.5,-0.2) -- (0.5,-0.8) -- cycle;
+
+        % Capa Verde/Clara Intermedia (Dermis)
+        \draw[fill=green!10, draw=green!40!black] 
+            (-1.5,-0.8) -- (0.5,-0.8) -- (1.5,-0.2) -- (-0.5,-0.2) -- cycle;
+        \draw[fill=green!15, draw=green!40!black] 
+            (-1.5,-0.8) -- (0.5,-0.8) -- (0.5,-0.3) -- (-1.5,-0.3) -- cycle;
+        \draw[fill=green!20, draw=green!40!black] 
+            (0.5,-0.8) -- (1.5,-0.2) -- (1.5,0.3) -- (0.5,-0.3) -- cycle;
+
+        % Capa Rosada Superior (Epidermis)
+        \draw[fill=pink!40, draw=pink!70!black, thick] 
+            (-1.5,-0.3) -- (0.5,-0.3) -- (1.5,0.3) -- (-0.5,0.3) -- cycle;
+        \draw[fill=pink!50, draw=pink!70!black, thick] 
+            (-1.5,-0.3) -- (0.5,-0.3) -- (0.5,0.2) -- (-1.5,0.2) -- cycle;
+        \draw[fill=pink!60, draw=pink!70!black, thick] 
+            (0.5,-0.3) -- (1.5,0.3) -- (1.5,0.8) -- (0.5,0.2) -- cycle;
+
+        % Superficie rosada del tejido
+        \draw[fill=pink!30, draw=pink!60!black, thick] 
+            (-1.5,0.2) -- (0.5,0.2) -- (1.5,0.8) -- (-0.5,0.8) -- cycle;
+
+        % Detalles de la superficie y partículas
+        \foreach \x/\y in {-0.2/0.4, 0.3/0.5, 0.8/0.6, -0.8/0.3} {
+            \draw[fill=black!70] (\x,\y) ellipse (0.04 and 0.02);
+        }
+        
+        % Absorbentes púrpuras dentro del tejido
+        \fill[purple!80!black] (-0.8, -0.05) circle (0.08);
+        \fill[purple!80!black] (-0.1, 0.05) circle (0.08);
+        \fill[purple!80!black] (0.6, 0.15) circle (0.08);
+        
+        % Partícula seleccionada para el zoom
+        \coordinate (absorber) at (1.1, 0.25);
+        \fill[purple!80!black] (absorber) circle (0.09);
+
+        % Etiquetas del lado izquierdo
+        \node[left=0.8cm of {-1.5,-0.2}] (light_lbl) {Light Source};
+        \node[left=0.8cm of {-1.5,-0.9}] (tissue_lbl) {Tissue};
+
+        % Láseres Rojos Incidentes
+        \foreach \shift in {-0.4, -0.1, 0.2, 0.5} {
+            \draw[red!30, line width=4pt, opacity=0.4] 
+                (-2.3, 2.2+\shift) -- (-0.5+\shift, 0.4+\shift*0.3);
+            \draw[red!80!black, line width=1.8pt, ->] 
+                (-2.3, 2.2+\shift) -- (-0.5+\shift, 0.4+\shift*0.3);
+        }
+    \end{scope}
+
+    % ==========================================
+    % 2. TRANSDUCTOR Y ONDAS RECEPTORAS
+    % ==========================================
+    \begin{scope}[shift={(0,2.8)}]
+        \fill[black!80] (-0.2, 0.8) rectangle (0.2, 1.1);
+        \fill[gray!80!black] (-0.5, 0.2) rectangle (0.5, 0.8);
+        \fill[black!90] (-0.5, 0.7) rectangle (0.5, 0.8);
+        \fill[gray!40] (-0.4, 0.0) rectangle (0.4, 0.2);
+        
+        \node[above=1.2cm] at (0,0) {Transducer};
+    \end{scope}
+
+    % Ondas ultrasónicas subiendo hacia el transductor
+    \begin{scope}[shift={(-0.8596707pt,31.4888439pt)}, xscale=1.012232540446, yscale=2.166171375446]
+        \foreach \r in {0.2, 0.4, 0.6, 0.8} {
+            \draw[purple!80!black, thick] (-\r, \r*0.4) arc (160:20:\r cm and \r*0.5cm);
+        }
+        \node[right=0.8cm] at (0.2, 0.3) {Ultrasonic};
+    \end{scope}
+
+
+    % ==========================================
+    % 3. ZOOM ESQUEMÁTICO (ÓRBITA Y LÍNEAS DE ZOOM)
+    % ==========================================
+    
+    \coordinate (zoom_center) at (7.5, 0.8);
+
+    % Gran Elipse punteada contenedora
+    \node[ellipse, draw, dashed, thick, black!80, minimum width=7.0cm, minimum height=4.4cm] 
+        (zoom_ellipse) at (zoom_center) {};
+
+    % Líneas de proyección de zoom (salen de la partícula púrpura a los bordes de la elipse)
+    \draw[dashed, black!70] (absorber) -- (zoom_ellipse.165);
+    \draw[dashed, black!70] (absorber) -- (4.5,-0.35);
+
+    % Esfera de la sustancia absorbente
+    \node[shading=radial, inner color=purple!30, outer color=purple!90!black, circle, minimum size=2.2cm] 
+        (sphere) at (zoom_center) {};
+
+    \node[below=1.3cm of sphere, font=\small] {light-absorbing substance};
+
+    % Fotones (Puntos rojos y ondas)
+    \begin{scope}[shift={($(zoom_center)+(-1.8,1.2)$)}]
+        \foreach \x/\y in {-0.2/0.2, 0.1/0.3, 0.3/0.1, -0.1/-0.1, 0.2/-0.2} {
+            \fill[red] (\x,\y) circle (0.07);
+        }
+        \node[above right=0.2cm] at (0,0) {Photon};
+
+        \draw[red!80!black, ->, decorate, decoration={snake, amplitude=1.2pt, segment length=5pt}] 
+            (-0.01,-0.2) -- (0.74,-0.8);
+        \draw[red!80!black, ->, decorate, decoration={snake, amplitude=1.2pt, segment length=5pt}] 
+            (-0.1,0.19) -- (0.9,-0.6);
+        \draw[red!80!black, ->, decorate, decoration={snake, amplitude=1.2pt, segment length=5pt}] 
+            (0.37,0.05) -- (1.04,-0.5);
+    \end{scope}
+
+    % Ondas Ultrasónicas que salen de la esfera
+    \begin{scope}[shift={($(zoom_center)+(-1.6,0)$)}]
+        \foreach \x in {0, -0.3, -0.6, -0.9} {
+            \draw[purple!60!black, thick] (\x, 0.25) arc (120:240:0.1cm and 0.25cm);
+        }
+    \end{scope}
+
+    \begin{scope}[shift={($(zoom_center)+(1.6,0)$)}]
+        \node[above=0.3cm] at (0.4,0) {Ultrasonic};
+        \foreach \x in {0, 0.3, 0.6, 0.9} {
+            \draw[purple!60!black, thick] (\x, 0.25) arc (60:-60:0.1cm and 0.25cm);
+        }
+    \end{scope}
+
+\end{tikzpicture}

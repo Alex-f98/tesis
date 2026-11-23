@@ -1,0 +1,122 @@
+\begin{tikzpicture}[
+    font=\sffamily\small,
+    >=stealth,
+    glass/.style={draw=black!70, thick, fill=cyan!5!white, fill opacity=0.3},
+    water/.style={draw=cyan!60!black, fill=cyan!20!white, fill opacity=0.5}
+]
+
+    % ==========================================
+    % 1. CAJA DE ACRÍLICO EN PERSPECTIVA 3D
+    % ==========================================
+    
+    \coordinate (A) at (-3.0, -1.0); 
+    \coordinate (B) at ( 1.0, -1.8); 
+    \coordinate (C) at ( 3.2, -0.6); 
+    \coordinate (D) at (-0.8,  0.2); 
+
+    \coordinate (At) at (-3.0,  1.5); 
+    \coordinate (Bt) at ( 1.0,  0.7); 
+    \coordinate (Ct) at ( 3.2,  1.9); 
+    \coordinate (Dt) at (-0.8,  2.7); 
+
+    % Agua
+    \coordinate (Aw) at (-3.0,  0.6);
+    \coordinate (Bw) at ( 1.0, -0.2);
+    \coordinate (Cw) at ( 3.2,  1.0);
+    \coordinate (Dw) at (-0.8,  1.8);
+
+    \fill[cyan!15] (A) -- (B) -- (C) -- (Cw) -- (Bw) -- (Aw) -- cycle;
+    \fill[cyan!25] (Aw) -- (Bw) -- (Cw) -- (Dw) -- cycle;
+    \draw[cyan!50!black, thick] (Aw) -- (Bw) -- (Cw);
+    \node[cyan!60!black, font=\bfseries] at (-1.8, 0.1) {water};
+
+    % Caras de cristal
+    \draw[glass] (A) -- (B) -- (Bt) -- (At) -- cycle; 
+    \draw[glass] (B) -- (C) -- (Ct) -- (Bt) -- cycle; 
+    \draw[glass] (At) -- (Bt) -- (Ct) -- (Dt) -- cycle; 
+
+    \draw[black!40, dashed] (A) -- (D) -- (C);
+    \draw[black!40, dashed] (D) -- (Dt);
+
+
+    % ==========================================
+    % 2. MUESTRA Y FLECHA DE ROTACIÓN 3D
+    % ==========================================
+    
+    \coordinate (Center) at (-0.1, -0.2);
+    
+    % Soporte vertical cilíndrico
+    \draw[draw=black!80, fill=gray!40, thick] 
+        ([xshift=-0.25cm, yshift=-1.1cm]Center) rectangle ([xshift=0.25cm, yshift=0.3cm]Center);
+    
+    % Muestra (Disco superior)
+    \draw[fill=white, draw=black!80, thick] (Center) ellipse (0.75cm and 0.28cm);
+    \draw[fill=black!80] ([xshift=-0.1cm]Center) circle (0.05);
+
+    % FLECHA DE ROTACIÓN LIMPIA
+    \draw[->, line width=1.6pt, white] 
+        ([yshift=-0.6cm]Center) ++(190:0.75cm and 0.25cm) arc (190:350:0.75cm and 0.25cm);
+    \draw[->, line width=1.2pt, black!90] 
+        ([yshift=-0.6cm]Center) ++(190:0.75cm and 0.25cm) arc (190:350:0.75cm and 0.25cm);
+    
+    \node[left=0.25cm, font=\bfseries\footnotesize, text=black!90, align=right] 
+        at ([xshift=-0.4cm, yshift=-0.6cm]Center) {Rotation\\Axis};
+
+
+    % ==========================================
+    % 3. LASER BEAM
+    % ==========================================
+    
+    \fill[green!40] (-0.9, 3.8) -- (0.7, 3.8) -- ([xshift=0.4cm]Center) -- ([xshift=-0.4cm]Center) -- cycle;
+    \fill[green!70!black] (-0.4, 3.8) -- (0.2, 3.8) -- ([xshift=0.15cm]Center) -- ([xshift=-0.15cm]Center) -- cycle;
+
+    \node[above, font=\bfseries\large, text=white, fill=black!75, rounded corners=3pt, inner sep=2.5pt] 
+        at (-0.1, 3.85) {Laser beam};
+
+
+    % ==========================================
+    % 4. SENSOR ULTRASÓNICO Y TERMISTOR
+    % ==========================================
+    
+    \begin{scope}[shift={(61pt,1pt)}, rotate=25]
+        \draw[draw=black!80, fill=gray!30, thick] (0,-0.25) rectangle (1.4,0.25);
+        \draw[fill=black!90, draw=black!80, thick] (0,0) ellipse (0.08cm and 0.25cm);
+        \draw[draw=black!80, fill=gray!60, thick] (0.8,-0.28) rectangle (1.2,0.28);
+        \draw[line width=3.5pt, black!90] (1.4, 0) .. controls (1.8,-0.1) and (2.0,-0.5) .. (2.3,-0.8);
+    \end{scope}
+
+    \node[above right=0.1cm and 0.4cm, font=\bfseries\large, text=white, fill=black!75, rounded corners=3pt, inner sep=2.5pt] 
+        at (3.03, 0.69) {Sensor};
+
+    % Termistor
+    \draw[line width=2pt, gray!80!black] (1.8, 1.4) -- (1.8, 2.7) -- (2.8, 3.0);
+    \fill[black] (1.8, 1.4) circle (0.08);
+    \node[right=0.1cm, font=\bfseries\large, text=white, fill=black!75, rounded corners=3pt, inner sep=2.5pt] 
+        at (2.0, 2.7) {Thermistor};
+
+
+    % ==========================================
+    % 5. INSET DE DETALLE
+    % ==========================================
+    
+    \coordinate (InsetCenter) at (0.5, -4.2);
+    
+    \draw[dashed, white, line width=2pt] (-0.8, 0.5) -- (-2.4, -2.7);
+    \draw[dashed, white, line width=2pt] ( 1.8, 0.6) -- ( 3.4, -2.7);
+    \draw[dashed, black!80, thick] (-0.8, 0.5) -- (-2.4, -2.7);
+    \draw[dashed, black!80, thick] ( 1.8, 0.6) -- ( 3.4, -2.7);
+
+    \begin{scope}[shift={(InsetCenter)}]
+        \draw[fill=white, draw=black!90, line width=1.5pt] (-2.9, -1.5) rectangle (2.9, 1.5);
+        \draw[fill=gray!15, draw=black!70, thick] (-1.1, 0) circle (1.1cm);
+        
+        \draw[line width=2pt, black!85] (-1.8,-0.4) .. controls (-1.3,-0.1) .. (-1.1,0.1);
+        \draw[line width=1.6pt, black!85] (-1.1,0.1) .. controls (-0.8,0.4) .. (-0.5,0.7);
+        \draw[line width=1.3pt, black!85] (-1.1,0.1) .. controls (-0.7,-0.2) .. (-0.4,-0.4);
+        \draw[line width=1.0pt, black!85] (-0.8,0.4) .. controls (-1.0,0.6) .. (-1.2,0.8);
+
+        \draw[fill=gray!40, draw=black!80, thick] (1.3, -0.4) rectangle (2.2, 0.4);
+        \fill[black!90] (1.3, -0.3) rectangle (1.45, 0.3); 
+    \end{scope}
+
+\end{tikzpicture}

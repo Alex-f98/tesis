@@ -1,0 +1,68 @@
+\begin{tikzpicture}[
+    font=\small,
+    >=stealth,
+    block/.style={
+        draw, 
+        rounded corners=8pt, 
+        minimum width=1.8cm, 
+        minimum height=1.4cm, 
+        align=center, 
+        thick
+    },
+    maskblock/.style={
+        draw, 
+        rounded corners=12pt, 
+        minimum width=2.2cm, 
+        minimum height=1.8cm, 
+        align=center, 
+        thick
+    }
+]
+
+    % Entrada
+    \node (in) {$|S|$};
+
+    % Bloque log
+    \node[block, right=0.8cm of in] (log) {log};
+
+    % Bloque Resta Promedio dB
+    \node[block, right=1.2cm of log] (sub) {
+        $|S|_{\text{dB}} - \langle |S| \rangle_{\text{dB}}$
+    };
+
+    % Bloque findPeaks
+    \node[block, right=0.8cm of sub] (peaks) {findPeaks};
+
+    % Bloque Interpolation con texto
+    \node[block, right=0.8cm of peaks, minimum width=2.2cm, minimum height=1.8cm] (interp) {
+        Interpolation\\[0.8cm]
+    };
+
+    % Dibujo interno de la parábola en Interpolation
+    \draw[thick] ($(interp.center)+(-0.35cm,-0.4cm)$) parabola bend ($(interp.center)+(0,-0.05cm)$) ($(interp.center)+(0.35cm,-0.4cm)$);
+    \filldraw[black] ($(interp.center)+(-0.25cm,-0.27cm)$) circle (1.8pt);
+    \filldraw[black] ($(interp.center)+(0,-0.05cm)$) circle (1.8pt);
+    \filldraw[black] ($(interp.center)+(0.25cm,-0.27cm)$) circle (1.8pt);
+
+    % Bloque Mask
+    \node[maskblock, right=3.4cm of interp, minimum width=2.4cm, minimum height=2.0cm] (mask) {
+        Mask\\[1.0cm]
+    };
+
+    % Dibujo interno en Mask
+    \draw[dashed, thick] ($(mask.center)+(-0.45cm,-0.55cm)$) rectangle ($(mask.center)+(0.45cm,0.25cm)$);
+    \filldraw[fill=green!50!white, draw=black, thick] ($(mask.center)+(0,-0.15cm)$) circle (0.35cm);
+    \draw[white, line width=1.2pt] 
+        ($(mask.center)+(-0.2cm,-0.1cm)$) sin ($(mask.center)+(-0.1cm,-0.02cm)$) cos ($(mask.center)+(0,-0.18cm)$) sin ($(mask.center)+(0.1cm,-0.02cm)$) cos ($(mask.center)+(0.2cm,-0.18cm)$);
+
+    % Conexiones principales
+    \draw[thick, ->] (in) -- (log);
+    \draw[thick] (log) -- node[above] {$|S|_{\text{dB}}$} (sub);
+    \draw[thick] (sub) -- (peaks);
+    \draw[thick] (peaks) -- (interp);
+
+    % Salidas de Interpolation hacia Mask (2 ramas con etiquetas)
+    \draw[thick] ($(interp.east)+(0,0.3)$) -- node[above, font=\tiny] {$[f_1, |S(f_1)|, \text{arg}(f_1)]$} ($(mask.west)+(0,0.3)$);
+    \draw[thick] ($(interp.east)-(0,0.3)$) -- node[below, font=\tiny] {$[f_2, |S(f_2)|, \text{arg}(f_2)]$} ($(mask.west)-(0,0.3)$);
+
+\end{tikzpicture}

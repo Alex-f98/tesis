@@ -1,0 +1,296 @@
+%-----------------------------------------
+%             Pipeline Corazones
+%-----------------------------------------
+
+El análisis cuantitativo de imágenes de Resonancia Magnética (RM) cardíaca desempeña un papel fundamental en la cardiología moderna, permitiendo la evaluación no invasiva de la función ventricular, la masa miocárdica y la progresión de diversas patologías cardiovasculares. En la práctica clínica habitual, la delimitación de las estructuras anatómicas clave (tales como la cavidad del ventrículo izquierdo, el ventrículo derecho y el miocardio del ventrículo izquierdo) requiere la segmentación precisa de las cavidades sobre cortes bidimensionales. Históricamente, este procedimiento se ha realizado mediante la delineación manual por parte de especialistas, un proceso que no solo insume un tiempo considerable, sino que también introduce una variabilidad inter e intraobservador significativa.
+
+Con el objetivo de automatizar y estandarizar esta tarea, las técnicas de aprendizaje profundo (\textit{Deep Learning}) se han consolidado como el estándar de estado del arte en segmentación de imágenes biomédicas. Sin embargo, para comprender el funcionamiento y la capacidad de abstracción de las arquitecturas especializadas empleadas actualmente, resulta indispensable analizar la evolución conceptual de los modelos predictivos basados en redes neuronales artificiales.
+
+El propósito de este capítulo es desarrollar de manera progresiva los fundamentos teóricos del aprendizaje profundo aplicados al procesamiento de imágenes. Comenzando desde las formulaciones matemáticas más elementales del Perceptrón simple y el Perceptrón Multicapa (MLP), se analizan las limitaciones de los modelos totalmente conectados al procesar datos matriciales. A partir de ello, se introduce la operación de convolución y la arquitectura de Redes Neuronales Convolucionales (CNNs), derivando finalmente en la arquitectura \textbf{U-Net}, diseñada específicamente para la segmentación semántica en imágenes médicas. Finalmente, se presenta la aplicación práctica de esta red en la segmentación de cavidades cardíacas sobre resonancias magnéticas 2D.
+
+
+\section{Fundamentos de Redes Neuronales Artificiales}
+
+El estudio de las redes neuronales artificiales surge del intento de modelar simplificadamente las estructuras biológicas del cerebro, el cual está compuesto por aproximadamente $10^{11}$ neuronas interconectadas (Figura \ref{fig:neurona}) \cite{Hertz1991}.
+La estructura de una neurona biológica consta de:
+\begin{itemize}
+    \item \textbf{Dendritas:} Redes de fibras nerviosas ramificadas en forma de árbol que actúan como canales de entrada de información hacia el cuerpo celular o \textbf{soma}, donde se encuentra el núcleo celular.
+    \item \textbf{Axón:} Una fibra alargada que transmite impulsos salientes desde el soma hacia otras células, ramificándose en sus extremos.
+    \item \textbf{Sinapsis:} Zonas de contacto fisiológico entre las ramificaciones axónicas emisoras y las dendritas o somas receptores de otras neuronas.
+\end{itemize}
+
+La transmisión celular es un proceso químico complejo: ante la llegada de impulsos eléctricos, el extremo emisor libera neurotransmisores en la hendidura sináptica. Esto altera el potencial eléctrico intracelular del soma receptor, sumando las contribuciones de miles de sinapsis simultáneas. Cuando este potencial acumulado supera un umbral determinado, la neurona genera un potencial de acción que se propaga a lo largo de su axón. Tras esta descarga, la neurona entra en un breve período refractario antes de poder activarse nuevamente.
+
+\begin{figure}[H]
+    \centering
+    \resizebox{0.95\textwidth}{!}{%
+        \input{img_tex/Corazones/neurona_real}%
+    }%
+    \caption{Representación esquemática de la estructura de una neurona biológica.}
+    \label{fig:neurona}
+\end{figure}
+
+En 1943, Warren McCulloch y Walter Pitts propusieron un modelo matemático simplificado de la neurona como una unidad binaria \cite{Hertz1991}. Este modelo calcula una suma ponderada de las entradas recibidas y genera una salida discreta $y \in \{0, 1\}$ en función de si dicha suma supera o no un umbral $\mu$:
+
+\begin{equation}
+    y = \Theta \left( w^T X - \mu \right)
+\end{equation}
+
+donde $X = [x_1, x_2, \dots, x_N]^T \in \{0, 1\}^N$ es el vector de entradas binarias, $w = [w_1, w_2, \dots, w_N]^T \in \mathbb{R}^N$ representa el vector de pesos sinápticos y $\mu \in \mathbb{R}$ es el umbral de disparo. La función $\Theta(\cdot)$ corresponde a la función escalón unitario de Heaviside.
+
+En este esquema, cada peso $w_j$ cuantifica la intensidad y naturaleza de la conexión sináptica: valores positivos representan conexiones excitatorias, valores negativos corresponden a conexiones inhibitorias y un peso nulo elimina la influencia de la entrada asociada. A pesar de su formulación elemental, este modelo permite implementar compuertas lógicas básicas y recomputar operaciones digitales ordinarias.
+
+Con el tiempo, el modelo se generalizó para admitir dominios continuos en $\mathbb{R}$:
+
+\begin{equation}
+    y = g \left( w^T X - \mu \right)
+\end{equation}
+
+donde $X \in \mathbb{R}^N$ es el vector de entradas reales y $g(\cdot)$ es una función no lineal continua denominada \textbf{función de activación}. Para simplificar la notación matemática, el umbral $\mu$ suele expresarse como un término de sesgo o \textit{bias} $b = -\mu$, reescribiendo la respuesta como:
+
+\begin{equation}
+    y = g \left( w^T X + b \right)
+\end{equation}
+
+A diferencia de la formulación fija de McCulloch-Pitts, Frank Rosenblatt introdujo en 1958 el \textbf{Perceptrón}, agregando una regla de aprendizaje automático supervisado sobre un conjunto de entrenamiento $\{(X^m, y^m)\}_{m=1}^M$ \cite{Hertz1991}. Ante un error entre la predicción $\hat{y} = g(w^T X + b)$ y el valor objetivo $y$, los pesos se actualizan iterativamente según:
+
+\begin{equation}
+    \Delta w_j = \eta \, (y - \hat{y}) \, x_j
+\end{equation}
+
+donde $\eta > 0$ es la tasa de aprendizaje (\textit{learning rate}).
+
+Geométricamente, la ecuación $w^T X + b = 0$ define un hiperplano de decisión en $\mathbb{R}^N$, lo que restringe la capacidad operativa del Perceptrón simple a problemas \textbf{linealmente separables}. En 1969, Minsky y Papert demostraron la incapacidad del modelo para resolver funciones no lineales básicas, como la operación lógica \textit{XOR} \cite{Hertz1991}.
+
+Para solventar esta limitación, se agregaron capas intermedias o capas ocultas, dando origen al \textbf{Perceptrón Multicapa} (\textit{Multilayer Perceptron}, MLP). El entrenamiento eficiente de estas estructuras se consolidó en 1986 mediante el algoritmo de \textbf{Retropropagación} (\textit{Backpropagation}) \cite{Hertz1991}, el cual aplica la regla de la cadena para calcular la derivada parcial de la función de pérdida respecto a cada peso:
+
+\begin{equation}
+    \Delta w_{ij} = -\eta \frac{\partial \mathcal{L}}{\partial w_{ij}}
+    \label{eq:deltaW}
+\end{equation}
+
+Este proceso requiere funciones de activación $g(\cdot)$ continuas y derivables (como la Sigmoide, $\tanh$ o ReLU), sustituyendo definitivamente la función escalón no derivable.
+
+El flujo de procesamiento en una red neuronal \textit{feedforward} se estructura en dos etapas principales:
+\begin{enumerate}
+    \item \textbf{Paso hacia adelante (\textit{Forward Pass}):} La información de entrada $X$ se propaga a través de las capas. En cada neurona, se calcula la suma ponderada $z = \sum_{j=1}^{m} w_j x_j + b$ y se aplica la función de activación $g(z)$ para obtener la salida estimada $\hat{y}$.
+    \item \textbf{Paso hacia atrás (\textit{Backward Pass}):} Se evalúa la discrepancia entre la predicción $\hat{y}$ y el valor esperado $y$ mediante una función de pérdida $\mathcal{L}(\hat{y}, y)$. A continuación, los gradientes se propagan en sentido inverso desde la capa de salida hacia las capas iniciales (Figuras \ref{fig:backpropagation} y \ref{fig:backpropagation_mlp}).
+\end{enumerate}
+
+\begin{figure}[H]
+    \centering
+    \resizebox{0.95\textwidth}{!}{%
+        \input{img_tex/Corazones/backpropagation}%
+    }%
+    \caption{Esquema del flujo de gradientes durante el paso de retropropagación en una neurona individual.}
+    \label{fig:backpropagation}
+\end{figure}
+
+De acuerdo con el algoritmo de descenso por el gradiente, la actualización de cada peso sináptico $w_j$ se formula como:
+
+\begin{equation}
+    w_j^{(\text{nuevo})} = w_j^{(\text{actual})} - \eta \frac{\partial \mathcal{L}}{\partial w_j}
+\end{equation}
+
+\begin{figure}[H]
+    \centering
+    \resizebox{0.95\textwidth}{!}{%
+        \input{img_tex/Corazones/backpropagation_mlp}%
+    }%
+    \caption{Retropropagación en un Perceptrón Multicapa (MLP). Se omiten los índices de neurona por claridad; cuando una unidad se conecta con múltiples neuronas de la capa posterior, sus caminos de gradiente se acumulan.}
+    \label{fig:backpropagation_mlp}
+\end{figure}
+
+Esta arquitectura se extiende interconectando múltiples neuronas en capas $l \in \{1, \dots, L\}$, cada una constituida por $m_l$ unidades. La primera capa recibe las variables de entrada y la última entrega una configuración de $m_{\text{out}}$ salidas acorde al problema abordado[cite: 3]. Como ilustra la Figura \ref{fig:backpropagation_mlp}, el gradiente que actualiza los pesos de las primeras capas ($l=1$) acumula las variaciones de la pérdida $\mathcal{L}$ propagadas iterativamente desde las capas superiores.
+
+Además de las capas ocultas, también se incorporan distintas funciones de activación (Figura \ref{fig:activation}), las cuales permiten aproximar cualquier función según el teorema de aproximación universal \cite{universal1993}.
+
+\begin{figure}[H]
+    \centering
+    \resizebox{0.75\textwidth}{!}{%
+        \input{img_tex/Corazones/activaciones.tex}%
+    }%
+    \caption{Ejemplos de algunas funciones de activación.}
+    \label{fig:activation}
+\end{figure}
+
+Estas funciones se aplican al final de cada capa y son denotadas como $g$ en la Figura \ref{fig:backpropagation_mlp}. Es necesario que $g$ sea no lineal, dado que si se utilizara una función lineal, se podría demostrar que la composición de capas equivale a una sola combinación lineal (pudiendo resumirse todas en una única transformación matricial), perdiendo así la ventaja de utilizar un perceptrón multicapa.
+
+El teorema de aproximación universal no especifica cuántas capas ni cuántas neuronas por capa utilizar, pero empíricamente se sabe que las redes más profundas suelen ser más eficientes en la etapa de entrenamiento y presentan mejores propiedades de generalización. La cantidad de unidades ocultas necesarias para aproximar una función suele decaer exponencialmente con la profundidad de la red; de esta manera, no siempre es necesario un modelo con excesivo ancho para obtener la función deseada. En algunos casos, la cantidad de neuronas crece exponencialmente con la dimensión de entrada; es decir, si se tiene una cantidad de características (\textit{features}) $m_{\text{entrada}}$ muy grande, el modelo puede llegar a ser demasiado complejo. Esto último representa un problema grave al trabajar con imágenes de media a alta resolución, dado que es necesario aplanarlas para poder ingresarlas al modelo. Este problema se acentúa al trabajar con imágenes 3D y de mayor dimensión, propias de las imágenes médicas que suelen procesarse en alta resolución.
+
+
+\section{Redes Neuronales Convolucionales (CNNs)}
+
+A pesar del éxito del Perceptrón Multicapa, su aplicación en el procesamiento de imágenes presenta dos limitaciones severas: la \textbf{destrucción de la topología espacial} (al aplanar una matriz 2D a un vector 1D) y la \textbf{explosión en la cantidad de parámetros} (un solo canal de $256 \times 256$ píxeles conectado a $1000$ neuronas requeriría más de 65 millones de pesos).
+
+Para resolver esto, las Redes Neuronales Convolucionales (\textit{Convolutional Neural Networks}, CNNs) reemplazan la multiplicación matricial densa por la \textbf{operación de convolución}. Mediante el deslizamiento de filtros o \textbf{kernels} de dimensión reducida (p. ej., $3 \times 3$) sobre la imagen, se extraen características locales (bordes, texturas) preservando la relación de vecindad entre píxeles. Esta formulación introduce dos propiedades fundamentales:
+
+\begin{enumerate}
+    \item \textbf{Compartición de pesos (\textit{Weight Sharing}):} El mismo filtro se aplica a toda la imagen, reduciendo drásticamente los parámetros entrenables.
+    \item \textbf{Invariancia por traslación:} La red detecta un rasgo característico independientemente de su posición espacial en la imagen.
+\end{enumerate}
+
+Una arquitectura CNN estándar alterna capas convolucionales con funciones de activación no lineales (como ReLU) y capas de \textbf{submuestreo} (\textit{pooling}, p. ej. \textit{Max-Pooling}). El \textit{pooling} reduce progresivamente la resolución espacial de los mapas de características (\textit{feature maps}), aumentando el campo receptivo de las capas más profundas para extraer representaciones semánticas de alto nivel.
+
+
+\begin{figure}[H]
+    \centering
+    \resizebox{0.76\textwidth}{!}{%
+        \input{img_tex/Corazones/kernel.tex}%
+    }%
+    \caption{Convolución: Aplicación de un kernel $K$ a una matriz de entrada $I$ de $3 \times 3$. La convolución consiste en multiplicar miembro a miembro los elementos del kernel con la submatriz correspondiente y sumarlos; este proceso se repite deslizando el kernel para obtener el mapa convolucionado $C$.}
+    \label{fig:kernel_conv}
+\end{figure}
+
+Analizando con más detalle la capa convolucional, esta modifica el esquema de las capas densas para evitar que la entrada deba aplanarse como un vector, utilizando así menos parámetros al compartir los mismos pesos ($K \rightarrow W$) entre neuronas. Matemáticamente, esta operación se expresa en la Ecuación \ref{eq:convolutional_layer}:
+
+\begin{align}
+    C_{(i,j)} &= f(K^T X_{(i,j)} + b)
+    \label{eq:convolutional_layer}
+    \\
+    X_{(i,j)} &= I_{[i+w,j+h]}
+\end{align}
+
+En el ejemplo de la Figura \ref{fig:kernel_conv}, $X_{(i,j)}$ representa ventanas de $2 \times 2$ que se multiplican miembro a miembro con los parámetros del kernel $K$, sumándoles luego un sesgo (\textit{bias}) común a todos los parámetros. La salida $C_{(i,j)}$ corresponde a cada nodo de cómputo; en este ejemplo, se tendrían 4 neuronas que comparten los mismos parámetros.
+
+
+Asi como esta la convolución se define la convolucion traspuesta la cual aplica el kernel $K$ a cada elemento de la matriz de caracteristicas $I_{(i,j)}$ recuperando asi una parte de la matriz inicial $C$ como se ve en la figura \ref{fig:conv_traspuesta}
+
+
+\begin{figure}[H]
+    \centering
+    \resizebox{0.76\textwidth}{!}{%
+        \input{img_tex/Corazones/conv_traspuesta.tex}%
+    }%
+    \caption{Convolución traspuesta: usando un stride 2, cada elemento de $I$ multiplica a $K$ completo y se ubica en su bloque $2{\times}2$ de $C$; los bloques no se solapan.}
+    \label{fig:conv_traspuesta}
+\end{figure}
+
+
+En general las redes que usan esto dos tipos de convoluciones son las Fully Convolutional Network (FCN) que tienen una parte de dowsampling dada por las convoluciones y un upsampling dada por las convoluciones traspuestas o similar, se usan para predicción densa pixel a pixel.
+
+
+\subsection{Hiperparámetros de la Convolución}
+
+El comportamiento y las dimensiones del mapa de características resultante de la operación de convolución dependen de dos hiperparámetros fundamentales:
+
+\begin{itemize}
+    \item \textbf{Stride ($S$):} Define la cantidad de píxeles que se desplaza el filtro o \textit{kernel} sobre la imagen en cada paso. Un paso de $S = 1$ desliza el filtro píxel a píxel, mientras que un $S > 1$ reduce la resolución espacial de la salida (submuestreo), disminuyendo el costo computacional.
+
+    \item \textbf{Padding ($P$):} Consiste en añadir un borde de valores constantes (habitualmente ceros, \textit{zero-padding}) alrededor de la imagen de entrada. Esta técnica cumple dos funciones críticas:
+    \begin{enumerate}
+        \item Preservar las dimensiones espaciales de la entrada tras la convolución (\textit{Same Padding}).
+        \item Evitar la pérdida de información en los bordes, permitiendo que los píxeles perimetrales sean procesados con la misma frecuencia que los centrales.
+    \end{enumerate}
+
+    Dada una entrada de dimensión espacial $H \times W$, un filtro de tamaño $K \times K$, un relleno $P$ y un paso $S$, la dimensión espacial de salida $H_{\text{out}} \times W_{\text{out}}$ se calcula mediante:
+
+    \begin{equation}
+        H_{\text{out}} = \left\lfloor \frac{H - K + 2P}{S} \right\rfloor + 1, \quad W_{\text{out}} = \left\lfloor \frac{W - K + 2P}{S} \right\rfloor + 1
+    \end{equation}
+
+    Asimismo, al aplicar $C_{\text{out}}$ filtros independientes en una misma capa, cada uno de ellos genera un mapa de características bidimensional distinto, produciendo un volumen final de activación de dimensión $H_{\text{out}} \times W_{\text{out}} \times C_{\text{out}}$.
+
+    \item \textbf{Pooling (Submuestreo):} Es una operación de reducción dimensional que, de forma similar al kernel, desliza una ventana sobre el mapa de características y resume la información conservando el valor máximo (\textbf{\textit{max-pooling}}), el mínimo (\textbf{\textit{min-pooling}}) o el valor promedio (\textbf{\textit{average-pooling}}). Se utiliza principalmente para reducir el tamaño espacial de las capas siguientes, disminuyendo así los requerimientos de memoria y la carga computacional; además, otorga invarianza ante pequeñas traslaciones y contribuye a prevenir el sobreajuste (\textit{overfitting}).
+\end{itemize}
+
+
+\subsection{Segmentación}
+
+La segmentación se puede interpretar como una extensión del problema de clasificación. En sí, la clasificación consiste en tomar, por ejemplo, una imagen $X$ y determinar a qué clase pertenece dentro de un conjunto $\{C_1, C_2, \dots, C_n\}$. Por su parte, la segmentación consiste en clasificar píxel a píxel la clase correspondiente dentro de la imagen.
+
+Dentro de la segmentación de imágenes se distinguen principalmente tres tipos: semántica, de instancias y panóptica.
+
+\begin{itemize}
+    \item \textbf{Segmentación semántica:} Agrupa todos los píxeles que pertenecen a una clase $C_i$ sin distinguir elementos o instancias individuales. Por ejemplo, al segmentar personas, no diferencia entre distintas personas; todos los píxeles donde haya una persona pertenecerán a la misma clase $C_i = \text{persona}$.
+
+    \begin{equation}
+    Y_{(i,j)} \in \mathcal{C}, \quad \text{donde } \mathcal{C} = \{C_1, C_2, \dots, C_n\}
+    \end{equation}
+
+
+    \item \textbf{Segmentación de instancias:} Identifica y delimita la forma exacta de cada objeto individual y contable por separado; posteriormente, se agrupan en su clase correspondiente $C_i$. Por ejemplo, primero delimita la región de cada persona individualmente y luego las agrupa en la clase $C_i = \text{persona}$.
+
+    \item \textbf{Segmentación panóptica:} Es una combinación de las dos anteriores.
+\end{itemize}
+
+
+
+\subsection{Arquitectura U-Net para Segmentación semantica}
+
+
+La arquitectura \textbf{U-Net} \cite{unet2015} es una red neuronal totalmente convolucional (\textit{Fully Convolutional Network}, FCN) diseñada específicamente para la segmentación semántica en imágenes biomédicas. Su estructura simétrica en forma de "U" (Figura~\ref{fig:unet}) se compone de dos ramas principales:
+
+
+\begin{figure}[H]
+    \centering
+    \resizebox{0.85\textwidth}{!}{%
+        \input{img_tex/Corazones/unet.tex}%
+    }%
+    \caption{unet}
+    \label{fig:unet}
+\end{figure}
+
+
+\begin{enumerate}
+    \item \textbf{Ruta de Contracción (\textit{Encoder}):} Actúa como una red convolucional tradicional. Consiste en la aplicación repetida de bloques de dos convoluciones de $3 \times 3$ seguidas de una activación ReLU y una operación de \textit{Max-Pooling} de $2 \times 2$ con paso $S = 2$. En cada etapa de submuestreo, la resolución espacial de los mapas de características se reduce a la mitad, mientras que el número de canales de características se duplica, permitiendo extraer representaciones semánticas profundas y de alto nivel.
+
+    \item \textbf{Ruta de Expansión (\textit{Decoder}):} Encargada de proyectar las características de bajo nivel hacia la resolución espacial original de la imagen. Cada bloque del \textit{decoder} aplica un subida de resolución (\textit{upsampling}) mediante convoluciones transpuestas de $2 \times 2$ que reducen a la mitad el número de canales, seguidas de convoluciones de $3 \times 3$ y activaciones ReLU.
+\end{enumerate}
+
+\subsection{Skip Connections}
+
+El elemento distintivo de la U-Net radica en las \textit{skip connections}, las cuales concatenan directamente los mapas de características de alta resolución procedentes de la ruta de contracción (\textit{encoder}) con los mapas de la ruta de expansión (\textit{decoder}) en sus niveles de resolución equivalentes.
+
+Durante el submuestreo en el \textit{encoder}, se pierde información espacial fina y localización precisa a cambio de ganar contexto semántico. Las \textit{skip connections} resuelven este problema reinyectando los detalles finos de alta frecuencia (como bordes anatómicos y contornos de tejidos) al \textit{decoder}, permitiendo una localización exacta de las estructuras.
+
+\subsection{Capa de Salida y Funciones de Pérdida}
+
+En la última capa de la red, se utiliza una convolución de $1 \times 1$ para mapear el vector de características de cada píxel al número deseado de clases (p. ej., cavidad del ventrículo izquierdo, miocardio o fondo). Para la clasificación binaria o multiclase por píxel, se aplica una función de activación Sigmoide o Softmax, respectivamente.
+
+El entrenamiento de la U-Net en segmentación biomédica suele emplear funciones de pérdida diseñadas para lidiar con el desbalance de clases entre el fondo y la estructura de interés, destacando el \textbf{coeficiente de similitud Dice} (\textit{Dice Loss}) combinado con la entropía cruzada binaria (\textit{Binary Cross-Entropy}, BCE):
+
+\begin{equation}
+    \mathcal{L}_{\text{Dice}} = 1 - \frac{2 \sum_{i} y_i \hat{y}_i + \epsilon}{\sum_{i} y_i + \sum_{i} \hat{y}_i + \epsilon}
+\end{equation}
+
+donde $y_i \in \{0,1\}$ representa la etiqueta real del píxel $i$, $\hat{y}_i \in$ es la probabilidad predicha por la red, y $\epsilon$ es un término de suavizado para evitar la división por cero.
+
+
+
+
+
+% #### **3. Redes Neuronales Convolucionales (CNNs)**
+% * **La Operación de Convolución:**
+%   * Uso de **filtros o kernels** que se desplazan sobre la imagen para extraer características locales (bordes, texturas, formas).
+
+%   * **Propiedades clave:** Preservación de la topología bidimensional y **compartición de pesos** (*weight sharing*), lo que reduce drásticamente los parámetros frente a un MLP.
+
+% * **Bloques Constructivos de una CNN:**
+%   * Capas de convolución, capas de activación no lineal y capas de **submuestreo (*pooling*)** para otorgar invarianza a pequeñas translaciones y reducir la dimensión espacial.
+% * **De Clasificación a Segmentación:**
+%   * Explicar la diferencia entre clasificar una imagen entera con capas densas al final vs. etiquetar cada píxel individualmente (segmentación semántica).
+
+
+
+% #### **4. La Arquitectura U-Net para Segmentación Médica**
+% * **Estructura Codificador-Decodificador (*Encoder-Decoder*):**
+
+
+%   * **Codificador (*Encoder* / Rama de contracción):** Red convolucional tradicional que reduce progresivamente la resolución espacial mientras extrae características semánticas de alto nivel.
+
+%   * **Decodificador (*Decoder* / Rama de expansión):** Aplica convoluciones transpuestas (o *upsampling*) para recuperar la resolución espacial original de la imagen.
+
+% * **Conexiones de Salto (*Skip Connections*):**
+%   * **El elemento crucial de la U-Net:** Transfieren directamente mapas de características de alta resolución del *encoder* al *decoder*. Esto permite recuperar la información espacial fina (bordes precisos de las cavidades cardíacas) que se pierde durante el submuestreo.
+
+% * **Funciones de Pérdida para Segmentación:**
+%   * *Cross-Entropy* píxel a píxel, *Dice Loss* (para mitigar el desbalance entre el fondo y el tejido de interés) o combinaciones de ambas.
+
+
+
+% #### **5. Aplicación al Problema de Segmentación Cardíaca**
+% * **Dataset y Preprocesamiento:** Definición de las cámaras cardíacas a segmentar a partir de las imágenes de resonancia magnética.
+
+
+% * **Evaluación Puntual de la U-Net:** Presentación de las máscaras predichas por el modelo base y discusión de sus limitaciones (como vacilación o errores en los bordes de los tejidos), sirviendo como pie para introducir la **calibración de incertidumbre mediante CP y CRC**.

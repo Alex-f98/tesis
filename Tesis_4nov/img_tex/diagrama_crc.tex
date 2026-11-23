@@ -1,0 +1,62 @@
+\begin{tikzpicture}[scale=1.3]
+
+    % --- EJES CARTESIANOS ---
+    % Corregido el nodo para evitar conflictos con babel y caracteres activos
+    \draw[-stealth, thick] (-0.2,0) -- (6.5,0) node[right] {$\lambda \in \Lambda$};
+    \draw[-stealth, thick] (0,-0.2) -- (0,4.5) node[above] {Riesgo Empírico $\hat{R}_n(\lambda)$ [Costo]};
+    
+    % --- LÍNEAS DE REFERENCIA ---
+    \draw[dashed, red, thick] (-0.2, 1.5) -- (6.0, 1.5) node[right, black] {$\alpha$ (Límite de Riesgo)};
+    \draw[dotted, gray] (-0.2, 3.8) -- (6.0, 3.8) node[right] {$B=1$};
+    \node[left] at (0, 3.8) {$1.0$};
+    \node[left] at (0, 0) {$0.0$};
+
+    % --- CURVA DE COSTO MONÓTONA ---
+    \draw[ultra thick, blue, domain=0.2:5.8, samples=100] 
+        plot (\x, {3.8 / (1 + exp(1.3*(\x - 2.5)))});
+    \node[blue, right] at (4.5, 0.8) {$\hat{R}_n(\lambda) = \frac{1}{n}\sum_{i=1}^n L(Y_i, C_\lambda(X_i))$};
+
+    % --- ESTADO A: REGIÓN DE INVIABILIDAD (Subcalibración) ---
+    \coordinate (A) at (0.6, 3.5);
+    \filldraw[black] (A) circle (2.5pt);
+    \node[above right] at (A) {\textbf{Estado A}: $\lambda \to \lambda_{\min}$};
+    % Corregido 'Bour' por la punta estándar 'stealth-'
+    \draw[stealth-, thin, black!60!cyan] (A) -- (1.5, 4.2) node[right, font=\footnotesize, align=left, text=blue!50!black] {
+        $|C_\lambda(X)| \to \min$ (Conjuntos vacíos)\\
+        $\hat{R}_n(\lambda) \gg \alpha \implies \text{Región Inviable}$
+    };
+
+    % --- ESTADO B: TRÁNSITO GEOMÉTRICO (Monotonicidad) ---
+    \coordinate (B) at (2.2, 2.3);
+    \filldraw[black] (B) circle (2.5pt);
+    \node[above right] at (B) {\textbf{Estado B}};
+    % Corregido 'Bour' por la punta estándar 'stealth-'
+    \draw[stealth-, thin, black!60!cyan] (B) -- (3.6, 3.2) node[right, font=\footnotesize, align=left, text=blue!50!green!80!black] {
+        $\lambda \uparrow \implies C_{\lambda_{1}} \subseteq C_{\lambda_{2}}$\\
+        $L(Y, C_{\lambda_{2}}) \leq L(Y, C_{\lambda_{1}})$\\
+        El costo desciende continuamente
+    };
+
+    % --- ESTADO C: INTERSECCIÓN Y CONVERGENCIA ÓPTIMA ---
+    \coordinate (C) at (2.9, 1.5); 
+    \filldraw[red] (C) circle (3pt);
+    \node[below left, red] at (C) {\textbf{Estado C}};
+    
+    % Proyección al eje lambda_hat
+    \draw[dashed, thick, black] (2.9, 1.5) -- (2.9, 0) node[below, font=\large] {$\hat{\lambda}$};
+
+    % Cuadro explicativo del Ínfimo Matemático
+    \draw[black, fill=yellow!10, rounded corners, thin] (3.1, -1.5) rectangle (8.2, -0.4);
+    \node[font=\small, align=left] (node1) at (5.7, -0.9) {
+        \textbf{Optimización (Ínfimo Estadístico):}\\
+        $\hat{\lambda} = \inf \left\{ \lambda : \frac{n}{n+1}\hat{R}_n(\lambda) + \frac{B}{n+1} \leq \alpha \right\}$
+    };
+
+    % --- ANOTACIÓN DE INFERENCIA EN TEST ---
+    \node[draw, rounded corners, fill=blue!5, font=\footnotesize, align=left] at (0.9, -0.95) {
+        \textbf{Testeo:}\\
+        $C_{\hat{\lambda}}(X_{\text{test}}) = \{k : \hat{f}_k \geq 1 - \hat{\lambda}\}$\\
+        $\mathbb{E}[L(Y_{\text{test}}, C_{\hat{\lambda}}(X_{\text{test}}))] \leq \alpha$
+    };
+
+\end{tikzpicture}

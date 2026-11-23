@@ -1,0 +1,17 @@
+\begin{tikzpicture}[scale=1.2, >=stealth]
+    % Ejes coordinados
+    \draw[->, thick] (-0.3,0) -- (5,0) node[below left] {$t$};
+    \draw[->, thick] (0,-0.3) -- (0,3.5);
+
+    % Marcas y etiquetas en los ejes
+    \draw[thick] (-0.1,1) -- (0.1,1) node[left, at start] {$f_0$};
+    \draw[thick] (-0.1,3) -- (0.1,3) node[left=1pt, at start] {$f_0 + \beta$};
+    \draw[thick] (2.2,-0.1) -- (2.2,0.1) node[below=1pt, at start] {$\tau$};
+
+    % Líneas punteadas de proyección
+    \draw[dotted, thick] (0,3) -- (2.2,3);
+    \draw[dotted, thick] (2.2,0) -- (2.2,3);
+
+    % Recta azul
+    \draw[line width=1.2pt, blue!70!black] (0,1) -- (2.2,3);
+\end{tikzpicture}

@@ -1,0 +1,120 @@
+\begin{tikzpicture}[
+  >=Stealth,
+  % ---------- Estilos ----------
+  input/.style={
+    circle, minimum size=1cm,
+    draw=entradaborde, line width=1pt,
+    fill=entrada!70, inner sep=0pt,
+    blur shadow={shadow blur steps=6, shadow xshift=0.3pt, shadow yshift=-0.6pt}
+  },
+  neuron/.style={
+    circle, minimum size=4.4cm,
+    draw=neuronaborde, line width=1.4pt,
+    fill=neurona!60, inner sep=0pt,
+    blur shadow={shadow blur steps=8, shadow xshift=0.5pt, shadow yshift=-1pt}
+  },
+  act/.style={
+    rounded corners=8pt, minimum width=2.1cm, minimum height=1.9cm,
+    draw=neuronaborde, line width=1.4pt,
+    fill=neurona!35, inner sep=0pt,
+    blur shadow={shadow blur steps=8, shadow xshift=0.5pt, shadow yshift=-1pt}
+  },
+  loss/.style={
+    rounded corners=8pt, minimum width=2.6cm, minimum height=1.3cm,
+    draw=perdidaborde, line width=1.2pt,
+    fill=perdida!55, inner sep=0pt,
+    blur shadow={shadow blur steps=6, shadow xshift=0.4pt, shadow yshift=-0.8pt}
+  },
+  conn/.style={
+    -{Stealth[length=2.6mm,width=2mm]},
+    line width=0.9pt, color=conexion
+  },
+  peso/.style={
+    midway, fill=white, inner sep=1.5pt,
+    font=\normalsize, text=conexion
+  },
+  back/.style={
+    -{Stealth[length=3mm,width=2.4mm]},
+    line width=1.3pt, color=retro
+  },
+  deriv/.style={
+    text=deriv, inner sep=3pt
+  },
+  caja/.style={
+    draw=deriv!60, rounded corners=6pt, fill=deriv!6,
+    line width=0.8pt, inner sep=8pt, text=deriv
+  }
+]
+  % ---------- Colores (locales a este tikzpicture) ----------
+  \definecolor{entrada}{RGB}{120,190,255}
+  \definecolor{entradaborde}{RGB}{30,90,160}
+  \definecolor{neurona}{RGB}{100,175,245}
+  \definecolor{neuronaborde}{RGB}{25,80,150}
+  \definecolor{perdida}{RGB}{205,180,245}
+  \definecolor{perdidaborde}{RGB}{110,70,170}
+  \definecolor{conexion}{RGB}{90,100,120}
+  \definecolor{retro}{RGB}{215,45,45}
+  \definecolor{deriv}{RGB}{25,100,190}
+
+  % ================= Propagación hacia adelante =================
+  % Entradas
+  \node[input] (x1) at (0, 3.8)  {};
+  \node[input] (x2) at (0, 2.5)  {};
+  \node[input] (xj) at (0, 1.2)  {};
+  \node[input] (xm) at (0, -2.0) {};
+
+  \node[left=4pt of x1] {\Large $x_1$};
+  \node[left=4pt of x2] {\Large $x_2$};
+  \node[left=4pt of xj] {\Large $x_j$};
+  \node[left=4pt of xm] {\Large $x_m$};
+
+  \foreach \y in {0.2,-0.4,-1.0} {
+    \fill[entradaborde] (0,\y) circle (1.6pt);
+  }
+
+  % Neurona: suma ponderada z
+  \node[neuron] (S) at (6.2, 1.25) {};
+  \node[minimum width=106pt] at (S) {\Large $z=\displaystyle\sum_{j=1}^{m} w_j\,x_j$};
+
+  % Activación, salida y pérdida
+  \node[act]  (G) at (10.05, 1.25) {\Large $g(\cdot)$};
+  \node       (Y) at (12.1, 1.25) {\Large $\hat{y}$};
+  \node[loss] (L) at (14.75, 1.25) {\Large $\mathcal{L}(\hat{y},y)$};
+
+  % Conexiones con pesos
+  \draw[conn] (x1) -- (S) node[peso, pos=0.45] {$w_1$};
+  \draw[conn] (x2) -- (S) node[peso, pos=0.45] {$w_2$};
+  \draw[conn] (xj) -- (S) node[peso, pos=0.45] {$w_j$};
+  \draw[conn] (xm) -- (S) node[peso, pos=0.45] {$w_m$};
+
+  \draw[conn] (S) -- (G);
+  \draw[conn] (G) -- (Y);
+  \draw[conn] (Y) -- (L);
+
+  % ================= Backpropagation =================
+  % Regla de actualización (cada factor apuntado por una flecha roja)
+  \node[deriv]                       (f1) at (6.2,  -3.4)
+       {\Large $\dfrac{\partial z}{\partial w_j}$};
+  \node[deriv]                       (f2) at (10.05, -3.4)
+       {\Large $\dfrac{\partial \hat{y}}{\partial z}$};
+  \node[deriv]                       (f3) at (14.75, -3.4)
+       {\Large $\dfrac{\partial \mathcal{L}}{\partial \hat{y}}$};
+
+  \node[deriv, left=0.11cm of f1] (u0)
+       {\Large $w_j \leftarrow w_j - \eta$};
+  \node[deriv] at ($(f1)!0.5!(f2)$) {\Large $\cdot$};
+  \node[deriv] at ($(f2)!0.5!(f3)$) {\Large $\cdot$};
+
+  % Flechas rojas: de cada etapa al factor que le corresponde
+  \draw[back] (S.south) to[out=-90, in=90] (f1.north);
+  \draw[back] (G.south) to[out=-90, in=90] (f2.north);
+  \draw[back] (L.south) to[out=-90, in=90] (f3.north);
+
+  % Regla de la cadena
+  \node[caja] at (9.2, -5.9)
+       {\Large $\dfrac{\partial \mathcal{L}(\hat{y},y)}{\partial w_j}
+        = \dfrac{\partial \mathcal{L}}{\partial \hat{y}}\,
+          \dfrac{\partial \hat{y}}{\partial z}\,
+          \dfrac{\partial z}{\partial w_j}$};
+
+\end{tikzpicture}

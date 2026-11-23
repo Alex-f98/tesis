@@ -1,0 +1,161 @@
+\begin{tikzpicture}[
+  scale=0.75,
+  >=Stealth,
+  % ---------- Estilos ----------
+  skip/.style={
+    -{Stealth[length=2.6mm,width=2mm]},
+    line width=1pt, color=black!75
+  },
+  pool/.style={
+    -{Stealth[length=2.2mm,width=1.8mm]},
+    line width=0.9pt, color=conexion
+  },
+  up/.style={
+    -{Stealth[length=2.2mm,width=1.8mm]},
+    line width=0.9pt, color=decborde
+  },
+  marco/.style={
+    draw=encborde, line width=0.9pt
+  },
+  etiqueta/.style={
+    text=conexion, font=\large, align=center
+  },
+  leyenda/.style={
+    text=conexion, font=\small, anchor=west
+  }
+]
+  % ---------- Colores (locales a este tikzpicture) ----------
+  \definecolor{enc}{RGB}{130,200,255}
+  \definecolor{encborde}{RGB}{25,80,150}
+  \definecolor{dec}{RGB}{70,115,225}
+  \definecolor{decborde}{RGB}{25,55,140}
+  \definecolor{conexion}{RGB}{90,100,120}
+  \definecolor{cielo}{RGB}{215,235,250}
+  \definecolor{suelo}{RGB}{170,190,208}
+  \definecolor{arbol}{RGB}{150,178,205}
+  \definecolor{gente}{RGB}{70,88,115}
+  \definecolor{persona}{RGB}{120,215,255}
+  \definecolor{fondo}{RGB}{18,38,78}
+
+  % ---------- Macros locales ----------
+  % \bloque{x}{canales}{tamaño}{color} : mapa de características en 3D
+  \def\bloque#1#2#3#4{%
+    \begin{scope}
+      \pgfmathsetmacro\ob{0.1*#3}
+      \path[fill=#4!55!white, draw=black!70, line width=0.6pt]
+        (#1,{#3/2}) -- ({#1+#2},{#3/2}) -- ({#1+#2+\ob},{#3/2+\ob})
+        -- ({#1+\ob},{#3/2+\ob}) -- cycle;
+      \path[fill=#4!70!black, draw=black!70, line width=0.6pt]
+        ({#1+#2},{-#3/2}) -- ({#1+#2+\ob},{-#3/2+\ob})
+        -- ({#1+#2+\ob},{#3/2+\ob}) -- ({#1+#2},{#3/2}) -- cycle;
+      \path[fill=#4, draw=black!70, line width=0.6pt]
+        (#1,{-#3/2}) rectangle ({#1+#2},{#3/2});
+    \end{scope}
+  }
+  % \salto{x_enc}{x_dec}{canales}{tamaño} : skip connection por arriba
+  \def\salto#1#2#3#4{%
+    \pgfmathsetmacro\ob{0.1*#4}
+    \draw[skip] ({#1+#3/2+\ob/2},{#4/2+\ob/2}) -- ++(0,0.5)
+      -| ({#2+#3/2+\ob/2},{#4/2+\ob/2});
+  }
+  % \persona{x}{y0}{escala}{color}
+  \def\persona#1#2#3#4{%
+    \fill[#4] (#1,{#2+1.8*#3}) circle ({0.2*#3});
+    \fill[#4, rounded corners=2pt]
+      ({#1-0.23*#3},{#2+0.55*#3}) rectangle ({#1+0.23*#3},{#2+1.55*#3});
+    \fill[#4] ({#1-0.2*#3},{#2}) rectangle ({#1-0.02*#3},{#2+0.6*#3});
+    \fill[#4] ({#1+0.02*#3},{#2}) rectangle ({#1+0.2*#3},{#2+0.6*#3});
+  }
+  \def\siluetas#1{%
+    \persona{0.60}{0.9}{1.00}{#1}
+    \persona{1.15}{0.8}{1.15}{#1}
+    \persona{1.65}{1.0}{0.80}{#1}
+  }
+
+  % ================= Imagen de entrada =================
+  \begin{scope}[shift={(-2.4,-2.5)}, yslant=0.2]
+    \begin{scope}
+      \clip (0,0) rectangle (2,4.6);
+      \fill[cielo] (0,0) rectangle (2,4.6);
+      \fill[arbol] (0.25,4.0) ellipse (0.55 and 0.85);
+      \fill[arbol] (1.65,3.9) ellipse (0.5 and 0.8);
+      \fill[suelo] (0,0) rectangle (2,1.7);
+      \siluetas{gente}
+    \end{scope}
+    \draw[marco] (0,0) rectangle (2,4.6);
+  \end{scope}
+  \node[etiqueta, anchor=north] at (-1.4,-2.9) {Imagen\\de entrada};
+
+  % ================= Encoder =================
+  \foreach \x in {2.0,2.5} { \bloque{\x}{0.3}{4.4}{enc} }
+  \foreach \x in {4.3,4.9} { \bloque{\x}{0.4}{3.1}{enc} }
+  \foreach \x in {6.5,7.2} { \bloque{\x}{0.5}{2.0}{enc} }
+
+  % ================= Cuello de botella =================
+  \bloque{8.9}{0.7}{1.2}{enc}
+  \bloque{9.8}{0.7}{1.2}{dec}
+
+  % ================= Decoder =================
+  \bloque{11.3}{0.5}{2.0}{enc}
+  \foreach \x in {11.9,12.5} { \bloque{\x}{0.5}{2.0}{dec} }
+
+  \bloque{13.9}{0.4}{3.1}{enc}
+  \foreach \x in {14.5,15.1} { \bloque{\x}{0.4}{3.1}{dec} }
+
+  \bloque{16.4}{0.3}{4.4}{enc}
+  \foreach \x in {16.9,17.4} { \bloque{\x}{0.3}{4.4}{dec} }
+
+  % ================= Skip connections =================
+  \salto{2.5}{16.4}{0.3}{4.4}
+  \salto{4.9}{13.9}{0.4}{3.1}
+  \salto{7.2}{11.3}{0.5}{2.0}
+
+  % ================= Flechas =================
+  \draw[pool] (-0.3,0) -- (1.9,0);
+  \draw[pool] (3.3,0) -- (4.25,0);
+  \draw[pool] (5.67,0) -- (6.45,0);
+  \draw[pool] (7.95,0) -- (8.85,0);
+  \draw[up] (10.67,0) -- (11.25,0);
+  \draw[up] (13.25,0) -- (13.85,0);
+  \draw[up] (15.86,0) -- (16.35,0);
+  \draw[pool] (18.2,0) -- (18.95,0);
+
+  % ================= Segmentación semántica =================
+  \begin{scope}[shift={(19.0,-2.5)}, yslant=0.2]
+    \begin{scope}
+      \clip (0,0) rectangle (2,4.6);
+      \fill[fondo] (0,0) rectangle (2,4.6);
+      \siluetas{persona}
+    \end{scope}
+    \draw[marco] (0,0) rectangle (2,4.6);
+  \end{scope}
+  \node[etiqueta, anchor=north] at (20.0,-2.9) {Segmentaci\'on\\sem\'antica};
+
+  % ================= Título =================
+  \node[font=\Large\bfseries, text=encborde] at (9.7,4.3) {U-Net};
+
+  % ================= Leyenda =================
+  \fill[enc, draw=black!70] (0.2,-5.35) rectangle (0.8,-4.85);
+  \draw[black!70, line width=0.6pt] (0.2,-5.35) rectangle (0.8,-4.85);
+  \node[leyenda] at (1.0,-5.1) {Encoder: conv $3{\times}3$ + ReLU};
+
+  \fill[dec] (8.0,-5.35) rectangle (8.6,-4.85);
+  \draw[black!70, line width=0.6pt] (8.0,-5.35) rectangle (8.6,-4.85);
+  \node[leyenda] at (8.8,-5.1) {Decoder: conv $3{\times}3$ + ReLU};
+
+  \fill[persona] (16.0,-5.35) rectangle (16.6,-4.85);
+  \draw[black!70, line width=0.6pt] (16.0,-5.35) rectangle (16.6,-4.85);
+  \node[leyenda] at (16.8,-5.1) {Persona};
+
+  \fill[fondo] (19.4,-5.35) rectangle (20.0,-4.85);
+  \draw[black!70, line width=0.6pt] (19.4,-5.35) rectangle (20.0,-4.85);
+  \node[leyenda] at (20.2,-5.1) {Fondo};
+
+  \draw[skip] (0.2,-6.2) -- (1.2,-6.2);
+  \node[leyenda] at (1.4,-6.2) {skip connection (concatenaci\'on)};
+  \draw[pool] (8.0,-6.2) -- (9.0,-6.2);
+  \node[leyenda] at (9.2,-6.2) {max-pool $2{\times}2$ / conv $1{\times}1$};
+  \draw[up] (16.0,-6.2) -- (17.0,-6.2);
+  \node[leyenda] at (17.2,-6.2) {up-conv $2{\times}2$};
+
+\end{tikzpicture}

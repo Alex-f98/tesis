@@ -1,0 +1,129 @@
+\begin{tikzpicture}[
+    font=\small,
+    >=stealth,
+    block/.style={
+        draw, 
+        rounded corners=8pt, 
+        minimum width=1.8cm, 
+        minimum height=1.6cm, 
+        align=center, 
+        thick
+    },
+    adc/.style={
+        draw, 
+        signal, 
+        signal to=right, 
+        thick, 
+        minimum height=0.9cm, 
+        inner sep=4pt
+    },
+    subblock/.style={
+        draw, 
+        rounded corners=5pt, 
+        minimum width=1.4cm, 
+        minimum height=0.6cm, 
+        align=center, 
+        thick,
+        font=\small
+    }
+]
+
+    % ==========================================
+    % FILA SUPERIOR: Procesamiento Inicial I/Q
+    % ==========================================
+    \node[adc] (adc) {ADC};
+    \node[right=0.2cm of adc, draw, thick, inner sep=0pt] (stream) {%
+        \begin{tabular}{|c|c|c|c|c@{}c@{}}
+            $I_0$ & $Q_0$ & $I_1$ & $Q_2$ & \dots & \hspace{0.2cm}
+        \end{tabular}%
+    };
+    \node[block, right=0.4cm of stream] (dc) {
+        $I \leftarrow I - \langle I \rangle$ \\[0.2cm]
+        $Q \leftarrow Q - \langle Q \rangle$
+    };
+    \node[block, right=0.5cm of dc] (win) {
+        $I \leftarrow I \cdot W$ \\[0.2cm]
+        $Q \leftarrow Q \cdot W$
+    };
+    \node[block, right=0.5cm of win] (fft1) {
+        {\Large $\mathcal{F}[\cdot]$}
+    };
+    \node[subblock, right=0.8cm of fft1.south east, anchor=south west, yshift=0.40cm] (delay1) {delay};
+    \node[subblock, below=0.12cm of delay1] (offset1) {offset};
+    \node[block, right=1.2cm of delay1.east |- fft1, minimum height=1.8cm] (ijq) {
+        {\Large $\mathcal{I} + j\mathcal{Q}$}
+    };
+    \draw[thick] (adc) -- (stream);
+    \draw[thick] (stream.east) -- (dc);
+    \draw[thick] ($(dc.east)+(0,0.3)$) -- ($(win.west)+(0,0.3)$);
+    \draw[thick] ($(dc.east)-(0,0.3)$) -- ($(win.west)-(0,0.3)$);
+    \draw[thick] ($(win.east)+(0,0.3)$) -- ($(fft1.west)+(0,0.3)$);
+    \draw[thick] ($(win.east)-(0,0.3)$) -- ($(fft1.west)-(0,0.3)$);
+    \draw[thick] ($(fft1.east)+(0,0.4)$) -- ($(ijq.west)+(0,0.4)$);
+    \draw[thick] ($(fft1.east)-(0,0.4)$) -- ++(0.3,0) coordinate (pivote1);
+    \filldraw[black] (pivote1) circle (1.5pt);
+    \filldraw[black] (delay1.west) circle (1.5pt);
+    \filldraw[black] (offset1.west) circle (1.5pt);
+    \draw[thick] (pivote1) -- (delay1.west);
+    \draw[thick] (delay1.east) -| ($(ijq.west)-(0,0.4)$);
+    \draw[thick] (offset1.east) -| ($(ijq.west)-(0,0.4)$);
+    \draw[thick] (ijq.east) -- ++(0.4,0) node[right] (Sw_out) {$S(\omega)$};
+    \node[below=0.1cm of Sw_out] {$f_s, {\text{nfft}}$};
+
+    % ==========================================
+    % FILA INFERIOR: Resampling y FFT Secundaria
+    % ==========================================
+    %\node[block, below=2.2cm of adc.west, anchor=west] (ifft) {
+    %    {\Large $\mathcal{F}^{-1}[\cdot]$}
+    %};
+    %\node[above=0.1cm of ifft] {$S(\omega)$};
+    %\node[block, right=1.0cm of ifft, minimum width=2.0cm] (resamp) {
+    %    Resampling
+    %};
+    %\node[left=0.1cm of resamp.west |- ifft, yshift=-0.7cm, align=right, minimum width=32pt] {$I, Q$\\$f_s$,\\ ${\text{nfft}}$};
+    %\node[block, right=1.0cm of resamp] (fft2) {
+    %    {\Large $\mathcal{F}[\cdot]$}
+    %};
+    %\node[subblock, right=0.8cm of fft2.south east, anchor=south west, yshift=0.40cm] (delay2) {delay};
+    %\node[subblock, below=0.15cm of delay2] (offset2) {offset};
+    %\node[block, right=1.5cm of delay2.east |- fft2] (mod) {
+    %    $\mathcal{S} = \mathcal{I} + j\mathcal{Q}$\\[0.1cm]
+    %    $\hookrightarrow |\mathcal{S}|$
+    %};
+    %\draw[thick] (ifft.east) -- node[above] {$S(t)$} (resamp.west |- ifft);
+    %\draw[thick] (resamp.south) -- ++(0,-0.3) node[below] {$\times$} node[right] {$S(t)$};
+    %\draw[thick] ($(resamp.east)+(0,0.3)$) -- node[above] {$I$} ($(fft2.west)+(0,0.3)$);
+    %\draw[thick] ($(resamp.east)-(0,0.3)$) -- node[above] {$Q$} ($(fft2.west)-(0,0.3)$);
+    %\draw[thick] ($(fft2.east)+(0,0.4)$) -- node[above] {$\mathcal{I}$} ($(mod.west)+(0,0.4)$) coordinate (I_line);
+    %\draw[thick] ($(fft2.east)-(0,0.4)$) -- node[above] {$\mathcal{Q}$} ++(0.3,0) coordinate (pivote2);
+    %\filldraw[black] (pivote2) circle (1.5pt);
+    %\filldraw[black] (delay2.west) circle (1.5pt);
+    %\filldraw[black] (offset2.west) circle (1.5pt);
+    %\draw[thick] (pivote2) -- (delay2.west);
+
+    % ==========================================
+    % SALIDAS Y CONEXIONES LIMPIAS
+    % ==========================================
+    %\coordinate (X_align) at ($(mod.east) + (1.4cm, 0)$);
+
+    % Salida S
+    %\draw[thick] (mod.east |- I_line) -- (X_align |- I_line) node[right] {$\mathcal{S}$};
+
+    % Salida |S|
+    %\coordinate (y_abs) at ($(mod.east)-(0,0.3cm)$);
+    %\draw[thick] (y_abs) -- (X_align |- y_abs) node[right] {$|\mathcal{S}|$};
+
+    % Salida Q
+    %\draw[thick] (delay2.east) -- ++(0.3,0) coordinate (del_out);
+    %\draw[thick] (offset2.east) -- ++(0.3,0) coordinate (off_out);
+    %\draw[thick] (del_out) |- (off_out);
+    %\coordinate (y_Q) at ($(mod.south) - (0, 0.6cm)$);
+    %\draw[thick] ($(del_out)!0.5!(off_out)$) |- (y_Q) -- (X_align |- y_Q) node[right] (Q_out) {$\mathcal{Q}$};
+
+    % Salida I (Baja limpiamente por debajo de mod y sale justo encima de Q)
+    %\coordinate (y_I) at ($(y_Q) + (0, 0.35cm)$);
+    %\draw[thick] ($(fft2.east)+(0,0.4)$) ++(3.08,0) |- (y_I) -- (X_align |- y_I) node[right] {$\mathbf{I}$};
+
+    %\node[below right={-0.10cm and -0.74cm} of Q_out, anchor=north] {$f_s^*, f>0$, $\text{nfft}^{*}$};
+
+\end{tikzpicture}

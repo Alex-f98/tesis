@@ -1,0 +1,117 @@
+
+\begin{tikzpicture}[
+    font=\small,
+    >=stealth,
+    block/.style={
+        draw, 
+        rounded corners=12pt, 
+        minimum width=2.4cm, 
+        minimum height=2.4cm, 
+        align=center, 
+        thick
+    },
+    maskblock/.style={
+        draw, 
+        rounded corners=12pt, 
+        minimum width=2.4cm, 
+        minimum height=2.4cm, 
+        align=center, 
+        thick
+    }
+]
+
+    % ==========================================
+    % 1. BLOQUE DATA Y VECTOR REDUCIDO
+    % ==========================================
+    
+    % Caja principal DATA
+    \draw[thick, rounded corners=12pt] (-0.5, -0.4) rectangle (3.0, 3.6);
+    \node[above, font=\bfseries] at (1.2, 3.6) {DATA \((N = H \times W)\)};
+
+    % Contenido en columna de DATA
+    \node at (1.2, 3.0) {\(\{ f_1, A_1; f_2, A_2 \}_0\)};
+    \node at (1.2, 2.3) {\(\{ f_1, A_1; f_2, A_2 \}_1\)};
+    \node at (1.2, 1.6) {\(\vdots\)};
+    \node at (1.2, 0.9) {\(\{ f_1, A_1; f_2, A_2 \}_j\)};
+    \node at (1.2, 0.2) {\(\vdots\)};
+    \node at (1.2, -0.2) {\(\{ f_1, A_1; f_2, A_2 \}_N\)};
+
+    % Resaltados verdes verticales
+    \fill[green!50!white, opacity=0.4, rounded corners=3pt] (0.55, -0.3) rectangle (1.05, 3.3);
+    \fill[green!50!white, opacity=0.4, rounded corners=3pt] (1.80, -0.3) rectangle (2.30, 3.3);
+
+    % Flecha con min(A)
+    \draw[thick, ->] (3.1, 1.6) -- node[above, font=\small] {\(\min(A)\)} (3.9, 1.6);
+
+    % Vector de amplitudes reducidas
+    \draw[thick, rounded corners=8pt] (4.0, -0.4) rectangle (5.2, 3.6);
+    \node at (4.6, 3.0) {\(\{A_1\}_0\)};
+    \node at (4.6, 2.3) {\(\{A_2\}_1\)};
+    \node at (4.6, 1.6) {\(\vdots\)};
+    \node at (4.6, 0.9) {\(\{A_1\}_j\)};
+    \node at (4.6, 0.2) {\(\vdots\)};
+    \node at (4.6, -0.2) {\(\{A_2\}_N\)};
+
+    % Flecha hacia KNN
+    \draw[thick, ->] (5.3, 1.6) -- (6.1, 1.6);
+
+
+    % ==========================================
+    % 2. BLOQUES KNN, ESTIM., FINDPEAKS Y MASK
+    % ==========================================
+
+    % Bloque KNN UNSUPERVISED
+    \node[block, minimum width=2.4cm] (knn) at (7.35, 1.6) {
+        \textbf{KNN}\\[0.1cm]
+        \textbf{No}\\[0.05cm]
+        \textbf{Supervisado}
+    };
+
+    % Bloque ESTIM. DENSIDAD DE DISTANCIAS
+    \node[block, minimum width=2.8cm] (dens) at (10.65, 1.6) {
+        \textbf{Estim.}\\[0.1cm]
+        \textbf{Densidad}\\[0.05cm]
+        \textbf{de}\\[0.05cm]
+        \textbf{Distancias(A)}
+    };
+
+    % Bloque findPeaks
+    \node[block, minimum width=3.0cm, minimum height=2.6cm] (peaks) at (14.25, 1.6) {};
+    \node[anchor=north, font=\bfseries] at (peaks.north) {findPeaks};
+
+    % Dibujo interno de la señal azul con dos picos
+    \draw[thick, ->] (13.05, 0.6) -- (13.05, 2.1) node[left, font=\tiny] {1};
+    \draw[thick, ->] (13.05, 0.6) -- (15.35, 0.6);
+
+    % Línea de UMBRAL VERTICAL en el mínimo local entre los dos picos
+    \draw[dashed, red!80!black, thick] (14.13, 0.6) -- (14.13, 2.0) node[above, font=\tiny, text=red!80!black] {Umbral};
+
+    \draw[thick, blue!80!black] (13.05, 0.66) 
+        to[out=10, in=230] (13.55, 1.05)
+        to[out=315, in=179] (14.13, 0.67)
+        to[out=358, in=260] (14.75, 1.8)
+        to[out=280, in=170] (15.25, 0.65);
+
+    % Bloque Mask
+    \node[maskblock, right=1.37cm of peaks] (mask) {};
+    \node[anchor=north, font=\bfseries] at (mask.north) {Mask};
+
+    % Coordenada auxiliar para el centro del dibujo de la máscara
+    \coordinate (mc) at ([yshift=-0.25cm]mask.center);
+
+    % Dibujo interno en Mask
+    \draw[dashed, thick] ([xshift=-0.45cm, yshift=-0.4cm]mc) rectangle ([xshift=0.45cm, yshift=0.4cm]mc);
+    \filldraw[fill=green!50!white, draw=black, thick] (mc) circle (0.35cm);
+    
+    % Onda blanca interna
+    \draw[white, line width=1.2pt] ([xshift=-0.2cm]mc) sin ([xshift=-0.1cm, yshift=0.08cm]mc) cos (mc);
+    \draw[white, line width=1.2pt] (mc) sin ([xshift=0.1cm, yshift=-0.08cm]mc) cos ([xshift=0.2cm]mc);
+
+    % Conexiones principales
+    \draw[thick, ->] (knn) -- (dens);
+    \draw[thick, ->] (dens) -- (peaks);
+
+    % Salidas de findPeaks hacia Mask
+    \draw[thick, ->] ([yshift=0.3cm]peaks.east) -- node[above, font=\tiny] {\([A_i \in \mathcal{A}]\)} ([yshift=0.3cm]mask.west);
+
+\end{tikzpicture}

@@ -1,0 +1,425 @@
+%-------------------------------------------------------------------------%
+%------------------------- Carga de paquetes -----------------------------%
+%-------------------------------------------------------------------------%
+\documentclass[12pt]{report}
+
+\usepackage[a4paper,headheight=16pt,scale={0.8,0.8},hoffset=0cm]{geometry}
+\usepackage[utf8]{inputenc}
+\usepackage{setspace}
+\usepackage{tikz}
+% \usetikzlibrary{arrows}
+\usepackage{enumerate}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\numberwithin{equation}{section}
+\numberwithin{figure}{section}
+\numberwithin{table}{section}
+\usepackage{fancyhdr}
+\usepackage[center,hang,bf]{caption}
+\usepackage{float}
+\usepackage{listings}
+\usepackage{graphicx}
+\usepackage{tabu}
+\usepackage{subfig}
+\usepackage{circuitikz}
+\usepackage{wrapfig}
+\usepackage{paralist}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{csquotes}
+\usepackage{ragged2e}
+\usepackage{chngcntr}
+\makeatletter
+\let\c@lofdepth\relax
+\let\c@lotdepth\relax
+\makeatother
+\usepackage{chngcntr,tocloft}
+\usepackage[spanish,shorthands=off]{babel}
+\usetikzlibrary{patterns}
+\usepackage{tikz}
+\usetikzlibrary{shapes.symbols, positioning, calc}
+\usetikzlibrary{shapes.geometric}
+\usetikzlibrary{decorations.pathmorphing}
+\usetikzlibrary{shadows.blur}
+
+\usepackage{algorithm}
+\usepackage{algorithmic}
+\usepackage{amsfonts}
+\usetikzlibrary{arrows.meta}
+
+\usepackage{url}
+\usepackage{hyperref} % Esto hace que los enlaces en la bibliografía sean interactivos (clicables)
+
+
+\counterwithin*{figure}{section}
+\counterwithin*{figure}{subsection}
+\counterwithin*{figure}{subsubsection}
+\addtolength{\cftfignumwidth}{2em}
+
+\renewcommand{\thefigure}{%
+  \ifnum\value{subsection}=0
+    \thesection.\arabic{figure}%
+  \else
+    \ifnum\value{subsubsection}=0
+      \thesubsection.\arabic{figure}%
+    \else
+      \thesubsubsection.\arabic{figure}%
+    \fi
+  \fi
+}
+
+\lstdefinelanguage{bash}{
+  keywords={mkdir,cp,ln,ls,cd,tree},
+  keywordstyle=\color{blue}\bfseries,
+  sensitive=true,
+  comment=[l]{\#},
+  commentstyle=\color{gray}\ttfamily,
+  stringstyle=\color{purple},
+  morestring=[b]",
+  morestring=[b]'
+}
+
+
+% --- Paleta de colores para código ---
+\definecolor{bashKeyword}{HTML}{005F9E}  % Azul profesional
+\definecolor{bashComment}{HTML}{6A737D}  % Gris suave
+\definecolor{bashString}{HTML}{8F4E8B}   % Púrpura
+\definecolor{bashBackground}{HTML}{F6F8FA}
+
+
+\lstdefinestyle{bashstyle}{
+  language=bash,
+  basicstyle=\ttfamily\small,
+  keywordstyle=\color{blue}\bfseries,
+  commentstyle=\color{gray}\ttfamily,
+  stringstyle=\color{purple},
+  backgroundcolor=\color{gray!5},
+  frame=single,
+  rulecolor=\color{black!20},
+  showstringspaces=false,
+  breaklines=true,
+  columns=fixed,
+  keepspaces=true,
+  escapeinside={(*@}{@*)}
+}
+
+%- para popner definiciones
+
+\theoremstyle{definition} 
+\newtheorem{definicion}{Definición}[chapter]
+
+\usepackage{amsmath, amssymb, amsthm}
+
+
+%-------------------------------------------------------------------------%
+%------------------------- INICIO DEL DOCUMENTO --------------------------%
+%-------------------------------------------------------------------------%
+\begin{document}
+\pagestyle{fancy}
+\renewcommand{\headrulewidth}{0.3pt}
+\renewcommand{\footrulewidth}{0.3pt}
+\renewcommand{\thefootnote}{\Roman{footnote}}
+\lhead{Conformal Predictión}
+\chead{}
+\rhead{Brian Fuentes}
+%\lfoot{Qmetro}
+\cfoot{}
+\rfoot{\thepage}
+
+%-------------------------------------------------------------------------%
+%-------------------------- CARÁTULA -------------------------------------%
+%-------------------------------------------------------------------------%
+\begin{center}
+%\includegraphics[scale=0.4]{FIUBA.png}\\
+\includegraphics[scale=0.4]{Uba_fiuba_ingenieria_logo.png}\\
+\hfill\break
+\large{\textsc{Departamento de Electrónica}}\\
+\large{Laboratorio de proc. de señales y comunicaciones}
+\end{center}
+
+\vspace{0.1cm}
+\begin{center}
+\rule{1\textwidth}{1pt}
+\setstretch{1}
+\vspace{0.4cm}
+\textbf{\large{\textsc{Predicción conforme en procesamiento de imágenes para problemas de ingeniería}}}
+\large{\\Tesis de grado de Ingeniería Electrónica}
+\end{center}
+
+\begin{center}
+\rule{1\textwidth}{1pt}
+\end{center}
+\vspace{-0.4cm}
+
+\begin{center}
+    {\textsc{Brian Fuentes}}
+\end{center}
+
+\begin{center}
+    {\textsc{101785}}
+\end{center}
+\vspace{-0.5cm}
+\newpage
+
+%-------------------------------------------------------------------------%
+%--------------------------- CONTENIDO -----------------------------------%
+%-------------------------------------------------------------------------%
+\begin{flushleft}
+
+\setlength{\parindent}{12pt}
+\newcommand{\norm}[1]{\left\lVert#1\right\rVert}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\tableofcontents
+\newpage
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\chapter{Introducción}
+\input{capitulos/s1_introduccion.tex}
+
+%Esta investigación aborda la problemática de la falta de confiabilidad y la excesiva confianza (overconfidence) de las redes neuronales modernas, las cuales operan habitualmente como "cajas negras" sin medidas rigurosas de incertidumbre.
+%
+%El objetivo central es el desarrollo y aplicación de marcos de trabajo basados en Predicción Conforme (CP) y Control de Riesgo Conforme (CRC) para transformar predicciones puntuales en conjuntos de predicción con garantías estadísticas de cobertura válidas para muestras finitas.
+%
+%
+%\begin{itemize}
+%    \item Nose....
+%\end{itemize}
+
+
+
+
+\chapter{Predicción conforme}
+\input{capitulos/s2_pred_conforme2.tex}
+
+\chapter{Pipeline corazones}
+\input{capitulos/s4_pipe_corazones.tex}
+
+\chapter{Pipeline de Tomografía Optoacústica}
+\input{capitulos/s3_pipe_toa}
+
+
+
+\chapter{Pipeline radar Tera-Hertz}
+\input{capitulos/s5_pipe_thz.tex}
+
+
+\chapter{Experimentos}
+
+\section{Corazones}
+\input{capitulos/s7_exp_corazones.tex}
+
+
+\section{TOA}
+\input{capitulos/s6_exp_toa.tex}
+
+\section{THz}
+\input{capitulos/s8_exp_thz.tex}
+
+
+
+
+
+\chapter{Conclusiones}
+
+\appendix
+\chapter{Anexo}
+
+\section{Teorema 1}
+\label{anexo:teorema1}
+
+Supongamos que $(X_i, Y_i)_{i=1,\dots,n}$ y $(X_\text{test}, Y_\text{test})$ son i.i.d. Entonces definimos $\hat{q}$ como
+\begin{equation*}
+\hat{q} = \inf \Bigg\{ q : \frac{\left| \{i : s(X_i, Y_i) \leq q\} \right|}{n} \;\ge\; \frac{\lceil (n + 1)(1 - \alpha)\rceil}{n} \Bigg\},
+\end{equation*}
+y los conjuntos de predicción resultantes como
+\begin{equation*}
+C(X) = \{y : s(X, y) \leq \hat{q}\}.
+\end{equation*}
+Entonces,
+\begin{equation*}
+\mathbb{P}\big(Y_\text{test} \in C(X_\text{test})\big) \;\ge\; 1 - \alpha.
+\end{equation*}
+Esta es la misma propiedad de cobertura que la ecuación (1) en la introducción, pero escrita de forma más formal.
+
+Como observación técnica, el teorema también se cumple si las observaciones satisfacen la condición más débil de \textbf{intercambiabilidad} (\textit{exchangeability}); ver [1]. A continuación, probamos la cota inferior.
+
+\vspace{0.3cm}
+\begin{proof}[Prueba del Teorema 1]
+Sea $s_i = s(X_i, Y_i)$ para $i=1,\dots,n$ y $s_\text{test} = s(X_\text{test}, Y_\text{test})$. Para evitar manejar empates, consideramos el caso en el cual los $s_i$ son distintos con probabilidad 1. Ver [25] para una prueba en el caso general.
+
+Sin pérdida de generalidad, asumimos que los puntajes de calibración están ordenados de modo que
+\begin{equation*}
+s_{(1)} < \cdots < s_{(n)}.
+\end{equation*}
+En este caso, tenemos que
+\begin{equation*}
+\hat{q} =
+\begin{cases}
+    s_{(\lceil (n+1)(1-\alpha)\rceil)} & \text{si } \alpha \ge \frac{1}{n+1}\\
+    \infty & \text{e.o.c.}
+\end{cases}
+\end{equation*}
+Notemos que, en el caso $\hat{q} = \infty$, se cumple $C(X_\text{test}) = \mathcal{Y}$, por lo que la propiedad de cobertura se satisface trivialmente; así que solo debemos tratar el caso $\alpha \ge 1/(n+1)$.
+
+Procedemos observando la igualdad de los dos eventos:
+\begin{equation*}
+\{Y_\text{test} \in C(X_\text{test})\} = \{s_\text{test} \leq \hat{q}\}.
+\end{equation*}
+Combinando esto con la definición de $\hat{q}$, obtenemos:
+\begin{equation*}
+\{Y_\text{test} \in C(X_\text{test})\} = \{s_\text{test} \leq s_{(\lceil (n+1)(1-\alpha)\rceil)}\}.
+\end{equation*}
+Aquí viene la idea crucial. Por la intercambiabilidad de las variables $(X_1,Y_1), \dots, (X_\text{test},Y_\text{test})$, tenemos:
+\begin{equation*}
+\mathbb{P}(s_\text{test} \leq s_{(k)}) = \frac{k}{n+1}, \quad \text{para todo entero } k.
+\end{equation*}
+En palabras, $s_\text{test}$ es igualmente probable de caer en cualquier posición entre los puntos de calibración $s_{(1)},\dots,s_{(n)}$. Nótese que aquí la aleatoriedad es sobre todas las variables $s_1,\dots,s_n,s_\text{test}$.
+
+De aquí concluimos lo siguiente. Tomando $k=\lceil (n+1)(1-\alpha)\rceil$, se tiene:
+\begin{equation*}
+\mathbb{P}\big(s_{\text{test}}\le s_{(k)}\big)=\frac{k}{n+1} =\frac{\lceil (n+1)(1-\alpha)\rceil}{n+1}\ge\frac{(n+1)(1-\alpha)}{n+1}=1-\alpha.
+\end{equation*}
+De ahí se obtiene la cota inferior de cobertura:
+\begin{equation*}
+\mathbb{P}(Y_{\text{test}}\in C(X_{\text{test}}))=\mathbb{P}(s_{\text{test}}\le\hat{q}) \ge 1-\alpha.
+\end{equation*}
+\end{proof}
+
+\vspace{0.2cm}
+Ahora la cota superior. Técnicamente, la cota superior solo se cumple cuando la distribución del score conforme es continua, evitando empates. En la práctica, sin embargo, esta condición no es importante, porque el usuario siempre puede añadir una cantidad ínfima de ruido aleatorio al score.
+
+\vspace{0.3cm}
+\noindent\textbf{Teorema D.2} (\textit{Cota superior de la calibración conforme}). \textit{Adicionalmente, si los puntajes $s_1,\dots,s_n$ tienen una distribución conjunta continua, entonces}
+\begin{equation*}
+\mathbb{P}\big(Y_\text{test} \in C(X_\text{test}, U_\text{test}, \hat{q})\big) \;\le\; 1 - \alpha + \frac{1}{n+1}.
+\end{equation*}
+
+\begin{thebibliography}{ABJ24}
+
+\bibitem[AB21]{angelopoulos2021gentle}
+A. N. Angelopoulos y S. Bates.
+\newblock {\em A Gentle Introduction to Conformal Prediction}.
+\newblock arXiv preprint arXiv:2107.07511, 2021.
+\newblock \url{https://arxiv.org/abs/2107.07511}.
+
+\bibitem[ABJ24]{angelopoulos2024conformal}
+A. N. Angelopoulos, S. Bates y M. I. Jordan.
+\newblock {\em Conformal Prediction and Risk Control}.
+\newblock arXiv preprint arXiv:2411.11824, 2024.
+\newblock \url{https://arxiv.org/abs/2411.11824}.
+
+
+
+\bibitem[VGB24]{segment_cp_2024}
+A. Varisco, L. Galteri, S. Bruni y A. Del Bimbo.
+\newblock {\em Conformal Semantic Image Segmentation: Post-hoc Quantification of Predictive
+Uncertainty}.
+\newblock arXiv preprint arXiv:2405.05145, 2024.
+\newblock \url{https://arxiv.org/abs/2405.05145}.
+
+
+
+\bibitem[SML24]{stml2024intro}
+Scientific Machine Learning.
+\newblock {\em Introduction to Conformal Prediction}.
+\newblock Plataforma interactiva de documentación, 2026.
+\newblock \url{https://scientific-machine-learning.streamlit.app/intro_cp}.
+
+
+\bibitem[KCP]{Kandisnky2023}
+Scientific Machine Learning.
+\newblock {\em Kandinsky Conformal Prediction: Efficient Calibration of Image
+Segmentation Algorithms}.
+\newblock arXiv preprint arXiv:2311.11837, 2023.
+\newblock \url{https://arxiv.org/pdf/2311.11837}.
+
+\bibitem[MDL]{DiLiscia2026}
+Scientific Machine Learning.
+\newblock {\em Redes Neuronales Guiadas para Aplicaciones Modeladas por la Ecuación de Onda}.
+\newblock ---
+\newblock \url{h---}.
+
+
+\bibitem[MG]{MGonzales2024}
+Scientific Machine Learning.
+\newblock {\em DIFFUSION ASSISTED IMAGE RECONSTRUCTION IN
+OPTOACOUSTIC TOMOGRAPHY}.
+\newblock arXiv preprint arXiv:2404.10239
+\newblock \url{https://arxiv.org/pdf/2404.10239}.
+
+\bibitem[YY]{Yifan2025}
+Yifan Yu, Cheuk Hin Ho, Yangshuai Wang,
+\newblock {\em A conformal prediction framework for uncertainty quantification in physics-informed neural networks}.
+\newblock arXiv preprint arXiv:2509.13717
+\newblock \url{https://arxiv.org/pdf/2509.13717}.
+
+
+
+
+
+
+\bibitem[BM]{BMosley2020}
+B.Moseley, A.Markham y T.Nissen-Meyer
+\newblock {\em Solving the wave equation with physics-informed deep learning}.
+\newblock arXiv preprint arXiv:2006.11894
+\newblock \url{https://arxiv.org/pdf/2006.11894}.
+
+
+
+\bibitem[H91]{Hertz1991}
+Anders Krogh, John Hertz y Richard G. Palmer
+\newblock {\em Introduction To The Theory Of Neural Computation}.
+\newblock url={https://books.google.co.cr/books?id=HlwZyAEACAAJ}.
+
+
+\bibitem[M93]{universal1993}
+Moshe Leshno and Vladimir Ya. Lin and Allan Pinkus and Shimon Schocken
+\newblock {\em Multilayer feedforward networks, Activation functions, Role of threshold, Universal approximation capabilities, ($\mu$) approximation}.
+\newblock url = {https://www.sciencedirect.com/science/article/pii/S0893608005801315}.
+
+\bibitem[OR15]{unet2015}
+Olaf Ronneberger, Philipp Fischer, and Thomas Brox
+\newblock {\em U-Net: Convolutional Networks for Biomedical
+Image Segmentation}.
+\newblock url = {https://arxiv.org/pdf/1505.04597}.
+
+
+
+\bibitem[DL26]{tesisDiliscia}
+Matías Di Liscia
+\newblock {\em Redes Neuronales Guiadas para Aplicaciones Modeladas por la Ecuación de Onda}.
+\newblock url = {https://-----}.
+
+
+\bibitem[VV12]{vock2012}
+Vladimir Vovk
+\newblock {\em Conditional validity of inductive conformal predictors}.
+\newblock url = {https://arxiv.org/pdf/1209.2673}.
+
+
+\bibitem[SLW18]{sadinle2018}
+Mauricio Sadinle, Jing Lei, and Larry Wasserman
+\newblock {\em Least Ambiguous Set-Valued Classifiers
+with Bounded Error Levels}.
+\newblock url = {https://arxiv.org/pdf/1609.00451}.
+
+
+
+\end{thebibliography}
+
+\end{flushleft}
+\end{document}
+
+
+
+
+
+
+
+
+
+%ref
+% https://tikz.dev/editor/web/

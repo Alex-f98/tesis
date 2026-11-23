@@ -1,0 +1,128 @@
+\begin{tikzpicture}[
+    font=\small,
+    >=stealth,
+    block/.style={
+        draw, 
+        rounded corners=12pt, 
+        minimum width=2.4cm, 
+        minimum height=2.4cm, 
+        align=center, 
+        thick
+    },
+    maskblock/.style={
+        draw, 
+        rounded corners=12pt, 
+        minimum width=2.4cm, 
+        minimum height=2.4cm, 
+        align=center, 
+        thick
+    }
+]
+
+    % ==========================================
+    % 1. ENTRADA: IMAGEN RUIDOSA DE LA PASTILLA
+    % ==========================================
+    
+    % Caja Imagen I (Ruidosa)
+    \draw[thick, rounded corners=12pt] (-0.5, 0.25) rectangle (2.25, 2.93);
+    \node[above, font=\bfseries] at (0.85, 3.6) {Imagen \(I\) (Ruidosa)};
+    
+    % Ilustración de la pastilla con ruido interno
+    \draw[thick, fill=gray!20, dashed] (0.85, 1.6) circle (0.8cm);
+    \node[font=\tiny, align=center] at (0.85, 1.6) {Pastilla\\+ Ruido};
+    \node[font=\tiny, gray] at (0, 2.73) {\(\cdot \cdot \times\)};
+    \node[font=\tiny, gray] at (1.73, 0.72) {\(\times \cdot \cdot\)};
+
+    % Flecha hacia Banco de Gabor / Matriz X
+    \draw[thick, ->] (2.3, 1.6) -- node[above, font=\tiny] {16 Filtros} node[below, font=\tiny] {Gabor} (3.2, 1.6);
+
+
+    % ==========================================
+    % 2. MATRIZ X Y K-MEANS (TEXTONES)
+    % ==========================================
+
+    % Matriz X de Respuestas
+    \draw[thick, rounded corners=8pt] (3.3, -0.4) rectangle (4.9, 3.6);
+    \node[above, font=\bfseries] at (4.1, 3.6) {Matriz \(X\)};
+    
+    \node at (4.1, 3.0) {\tiny \([r_1 \dots r_{16}]_0\)};
+    \node at (4.1, 2.3) {\tiny \([r_1 \dots r_{16}]_1\)};
+    \node at (4.1, 1.6) {\(\vdots\)};
+    \node at (4.1, 0.9) {\tiny \([r_1 \dots r_{16}]_j\)};
+    \node at (4.1, 0.2) {\(\vdots\)};
+    \node at (4.1, -0.2) {\tiny \([r_1 \dots r_{16}]_N\)};
+
+    % Flecha hacia KMeans
+    \draw[thick, ->] (4.9, 1.6) -- (5.7, 1.6);
+
+    % Bloque KMeans Textons
+    \node[block, minimum width=2.4cm] (km1) at (6.9, 1.6) {
+        \textbf{K-Means}\\[0.1cm]
+        \tiny Textones\\
+        \tiny (\(K_1 = 10\))
+    };
+
+    % Flecha a Mapa de Textones
+    \draw[thick, ->] (km1) -- (8.46, 1.6);
+
+
+    % ==========================================
+    % 3. MAPA DE TEXTONES Y HISTOGRAMAS
+    % ==========================================
+
+    % Mapa de Textones (H x W)
+    \draw[thick, rounded corners=8pt] (8.5, -0.4) rectangle (10.1, 3.6);
+    \node[anchor=north, font=\bfseries, align=center] at (9.3, 3.5) {\footnotesize Texton\\[-0.05cm]\footnotesize Map};
+    
+    % Ventana 21x21 sobre el Texton Map
+    \draw[dashed, red!80!black, thick] (8.8, 1.1) rectangle (9.8, 2.1);
+    \node[font=\tiny, text=red!80!black] at (9.3, 0.8) {Ventana \(21\times21\)};
+
+    % Flecha hacia Histograma Local
+    \draw[thick, ->] (10.2, 1.6) -- (11.0, 1.6);
+
+    % Matriz de Histogramas Locales
+    \draw[thick, rounded corners=8pt] (11.1, -0.4) rectangle (12.8, 3.6);
+    \node[anchor=north, font=\bfseries, align=center] at (11.95, 3.5) {\footnotesize Matriz\\[-0.05cm]\footnotesize Hist.};
+    
+    \node at (11.95, 2.4) {\tiny \(\mathbf{h}_0 \in \mathbb{R}^{10}\)};
+    \node at (11.95, 1.8) {\tiny \(\mathbf{h}_1 \in \mathbb{R}^{10}\)};
+    \node at (11.95, 1.3) {\(\vdots\)};
+    \node at (11.95, 0.75) {\tiny \(\mathbf{h}_j \in \mathbb{R}^{10}\)};
+    \node at (11.95, 0.15) {\(\vdots\)};
+    \node at (11.95, -0.15) {\tiny \(\mathbf{h}_N \in \mathbb{R}^{10}\)};
+
+    % Flecha hacia GMM
+    \draw[thick, ->] (12.9, 1.6) -- (13.7, 1.6);
+
+
+    % ==========================================
+    % 4. GMM Y SALIDA MÁSCARA (TU BLOQUE ORIGINAL)
+    % ==========================================
+
+    % Bloque GMM
+    \node[block, minimum width=2.4cm] (gmm) at (14.9, 1.6) {
+        \textbf{GMM}\\[0.1cm]
+        \tiny Regiones\\
+        \tiny (\(K_2 = 10\))
+    };
+
+    % Bloque Mask (Misma construcción e identidad visual exacta que el anterior)
+    \node[maskblock, right=1.02cm of gmm, minimum width=78.4613287pt, minimum height=79.6677171pt] (mask) {};
+    \node[anchor=north, font=\bfseries] at (mask.north) {Mask};
+
+    % Coordenada auxiliar para el centro del dibujo de la máscara
+    \coordinate (mc) at ([yshift=-0.25cm]mask.center);
+
+    % Dibujo interno en Mask
+    \draw[dashed, thick] ([xshift=-0.45cm, yshift=-0.4cm]mc) rectangle ([xshift=0.45cm, yshift=0.4cm]mc);
+    \filldraw[fill=green!50!white, draw=black, thick] (mc) circle (0.9cm);
+    
+    % Onda blanca interna
+    \draw[white, line width=1.2pt] ([xshift=-0.2cm]mc) sin ([xshift=-0.1cm, yshift=0.08cm]mc) cos (mc);
+    \draw[white, line width=1.2pt] (mc) sin ([xshift=0.1cm, yshift=-0.08cm]mc) cos ([xshift=0.2cm]mc);
+
+    % Conexión final desde GMM hacia Mask
+    \draw[thick, ->] (gmm) -- (mask.west);
+
+\end{tikzpicture}

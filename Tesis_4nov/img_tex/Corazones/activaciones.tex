@@ -1,0 +1,102 @@
+% \documentclass[tikz,border=10pt]{standalone}
+% \usepackage[utf8]{inputenc}
+% \usepackage{amsmath,amssymb}
+% \usetikzlibrary{arrows.meta}
+% 
+% \begin{document}
+% 
+% % Estilos y colores locales al tikzpicture (nada global).
+% % Solo TikZ básico: no hace falta pgfplots.
+\begin{tikzpicture}[
+  x=0.8cm, y=0.8cm,
+  % ---------- Estilos ----------
+  eje/.style={
+    -{Stealth[length=2.2mm,width=1.6mm]},
+    line width=0.7pt, color=ejecol
+  },
+  marca/.style={line width=0.6pt, color=ejecol},
+  guia/.style={
+    dashed, line width=0.6pt, color=guiacol
+  },
+  curva/.style={
+    line width=1.5pt, color=curvacol, line cap=round
+  },
+  curvaflecha/.style={
+    curva, -{Stealth[length=2.6mm,width=2mm]}
+  },
+  panel/.style={
+    rounded corners=8pt, draw=curvacol!35, fill=curvacol!5,
+    line width=0.8pt
+  },
+  nombre/.style={
+    anchor=north, text=curvacol!85!black, font=\large\bfseries
+  },
+  % Ejes con marcas en +-1, dibujados a mano (no depende de librerías).
+  % Uso: \pic {ejes};
+  pics/ejes/.style={
+    code={
+      \draw[eje] (-3.4, 0) -- (3.6, 0) node[right, text=black] {$z$};
+      \draw[eje] (0, -1.9) -- (0, 1.9);
+      \draw[marca] (-0.1, 1) -- (0.1, 1);
+      \draw[marca] (-0.1,-1) -- (0.1,-1);
+      \node[left=3pt, font=\small, fill=white, inner sep=1pt, text=black] at (0, 1) {$1$};
+      \node[left=3pt, font=\small, fill=white, inner sep=1pt, text=black] at (0,-1) {$-1$};
+    }
+  }
+]
+  % ---------- Colores (locales a este tikzpicture) ----------
+  \definecolor{curvacol}{RGB}{25,100,190}
+  \definecolor{ejecol}{RGB}{60,70,90}
+  \definecolor{guiacol}{RGB}{140,150,170}
+
+  % ================= Sigmoide =================
+  \begin{scope}[shift={(0,0)}]
+    \draw[panel] (-4.2,-3.7) rectangle (4.9,4.3);
+    \draw[guia] (-3,1) -- (3,1);
+    \pic {ejes};
+    \draw[curva] plot[domain=-3:3, samples=80, smooth]
+      (\x, {1/(1+exp(-\x))});
+    \node[anchor=south] at (0.1,2.2) {\large $g(z)=\dfrac{1}{1+e^{-z}}$};
+    \node[nombre] at (0,-2.3) {Sigmoide};
+  \end{scope}
+
+  % ================= Tangente hiperbólica =================
+  \begin{scope}[shift={(10.6,0)}]
+    \draw[panel] (-4.2,-3.7) rectangle (4.9,4.3);
+    \draw[guia] (-3,1) -- (3,1);
+    \draw[guia] (-3,-1) -- (3,-1);
+    \pic {ejes};
+    \draw[curva] plot[domain=-3:3, samples=80, smooth]
+      (\x, {tanh(\x)});
+    \node[anchor=south] at (0.1,2.2) {\large $g(z)=\dfrac{e^{z}-e^{-z}}{e^{z}+e^{-z}}$};
+    \node[nombre] at (0,-2.3) {Tangente hiperb\'olica};
+  \end{scope}
+
+  % ================= ReLU =================
+  \begin{scope}[shift={(0,-9)}]
+    \draw[panel] (-4.2,-3.7) rectangle (4.9,4.3);
+    \pic {ejes};
+    \draw[curvaflecha] (-3,0) -- (0,0) -- (1.55,1.55);
+    \node[anchor=south] at (0.1,2.2) {\large $g(z)=\max\{z,\,0\}$};
+    \node[nombre] at (0,-2.3) {ReLU};
+  \end{scope}
+
+  % ================= alfa-ELU =================
+  \begin{scope}[shift={(10.6,-9)}]
+    \draw[panel] (-4.2,-3.7) rectangle (4.9,4.3);
+    \draw[guia] (-3,-1) -- (3.2,-1)
+      node[right, font=\small, text=black] {$-\alpha$};
+    \pic {ejes};
+    \draw[curvaflecha] plot[domain=-3:0, samples=60, smooth]
+      (\x, {exp(\x)-1}) -- (1.55,1.55);
+    \node[anchor=south] at (0.1,2.2)
+      {\large $g(z)=\begin{cases}
+         z & z\ge 0\\[2pt]
+         \alpha\,(e^{z}-1) & z<0
+       \end{cases}$};
+    \node[nombre] at (0,-2.3) {$\alpha$-ELU};
+  \end{scope}
+
+\end{tikzpicture}
+
+%\end{document}

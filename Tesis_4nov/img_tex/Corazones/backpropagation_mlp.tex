@@ -1,0 +1,176 @@
+% Estilos y colores locales al tikzpicture (nada global).
+\begin{tikzpicture}[
+  >=Stealth,
+  % ---------- Estilos ----------
+  input/.style={
+    circle, minimum size=1cm,
+    draw=entradaborde, line width=1pt,
+    fill=entrada!70, inner sep=0pt,
+    blur shadow={shadow blur steps=6, shadow xshift=0.3pt, shadow yshift=-0.6pt}
+  },
+  % Neurona: texto mínimo (Σ | g) para que el círculo nunca crezca
+  % aunque cambie el tamaño de letra del documento.
+  hid/.style={
+    circle, minimum size=1.6cm,
+    draw=neuronaborde, line width=1.2pt,
+    fill=neurona!70, inner sep=0pt, outer sep=0pt,
+    blur shadow={shadow blur steps=8, shadow xshift=0.5pt, shadow yshift=-1pt}
+  },
+  loss/.style={
+    rounded corners=8pt, minimum width=2.6cm, minimum height=1.3cm,
+    draw=perdidaborde, line width=1.2pt,
+    fill=perdida!55, inner sep=0pt,
+    blur shadow={shadow blur steps=6, shadow xshift=0.4pt, shadow yshift=-0.8pt}
+  },
+  conn/.style={
+    -{Stealth[length=2.6mm,width=2mm]},
+    line width=0.9pt, color=conexion
+  },
+  back/.style={
+    -{Stealth[length=3mm,width=2.4mm]},
+    line width=1.3pt, color=retro
+  },
+  deriv/.style={
+    text=deriv, inner sep=3pt
+  },
+  caja/.style={
+    draw=deriv!60, rounded corners=6pt, fill=deriv!6,
+    line width=0.8pt, inner sep=8pt, text=deriv
+  },
+  link/.style={
+    color=conexion!70, line width=0.6pt
+  },
+  wv/.style={color=verde,   line width=0.9pt},
+  wp/.style={color=violeta, line width=0.9pt},
+  llave/.style={
+    color=conexion, line width=1pt, line cap=round
+  },
+  % Llave dibujada a mano con TikZ básico (no depende de ninguna librería).
+  % Uso: \pic at (x,y) {llave};   ancho 2.4 cm, profundidad 0.5 cm
+  pics/llave/.style={
+    code={
+      \draw[llave]
+        (-1.2, 0) to[out=-90, in=180] (-0.95,-0.25) -- (-0.25,-0.25)
+        to[out=0, in=100] (0,-0.5)
+        to[out=80, in=180] (0.25,-0.25) -- (0.95,-0.25)
+        to[out=0, in=-90] (1.2, 0);
+    }
+  }
+]
+  % ---------- Colores (locales a este tikzpicture) ----------
+  \definecolor{entrada}{RGB}{120,190,255}
+  \definecolor{entradaborde}{RGB}{30,90,160}
+  \definecolor{neurona}{RGB}{100,175,245}
+  \definecolor{neuronaborde}{RGB}{25,80,150}
+  \definecolor{perdida}{RGB}{150,205,250}
+  \definecolor{perdidaborde}{RGB}{40,100,170}
+  \definecolor{conexion}{RGB}{90,100,120}
+  \definecolor{retro}{RGB}{215,45,45}
+  \definecolor{deriv}{RGB}{25,100,190}
+  \definecolor{verde}{RGB}{30,150,75}
+  \definecolor{violeta}{RGB}{125,80,190}
+
+  % ================= Red con muchas capas =================
+
+  % ---- Flecha de propagación hacia adelante ----
+  \draw[conn, line width=1.2pt] (-0.5, 7.0) -- (19.0, 7.0)
+    node[midway, fill=white, inner sep=3pt, text=conexion]
+    {\large Propagaci\'on hacia adelante (forward)};
+
+  % ---- Nombres de capa ----
+  \node at (0,    5.5) {\large Entrada};
+  \node at (4.6,  5.5) {\large Capa 1};
+  \node at (8.8,  5.5) {\large Capa 2};
+  \node at (13.0, 5.5) {\large Capa 3 (salida)};
+
+  % ---- Entradas ----
+  \node[input] (I1) at (0,  3.9) {};
+  \node[input] (I2) at (0,  2.4) {};
+  \node[input] (Ij) at (0,  0.9) {};
+  \node[input] (Im) at (0, -2.5) {};
+  \node[left=4pt of I1] {\Large $x_1$};
+  \node[left=4pt of I2] {\Large $x_2$};
+  \node[left=4pt of Ij] {\Large $x_j$};
+  \node[left=4pt of Im] {\Large $x_m$};
+  \foreach \y in {-0.3,-0.9,-1.5} { \fill[entradaborde] (0,\y) circle (1.6pt); }
+
+  % ---- Neuronas ocultas (cada una: suma Σ y luego activación g) ----
+  \foreach \l/\x in {B/4.6, C/8.8} {
+    \foreach \n/\y in {1/3.5, 2/1.05, k/-2.5} {
+      \node[hid] (\l\n) at (\x,\y) {\large $\Sigma\,|\,g$};
+    }
+    \foreach \y in {-0.5,-0.75,-1.0} { \fill[entradaborde] (\x,\y) circle (1.6pt); }
+  }
+
+  % ---- Neurona de salida, ŷ y pérdida ----
+  \node[hid] (O) at (13.0, 0.5) {\large $\Sigma\,|\,g$};
+  \node (Yh) at (15.2, 0.5) {\Large $\hat{y}$};
+  \node[loss] (Lo) at (17.6, 0.5) {\Large $\mathcal{L}(\hat{y},y)$};
+  \draw[conn] (O) -- (Yh);
+  \draw[conn] (Yh) -- (Lo);
+
+  % ---- Conexiones (cada neurona tiene su propio vector de pesos) ----
+  \foreach \a in {1,2,j,m} { \draw[link] (I\a) -- (B2); }
+  \foreach \a in {1,2,k} {
+    \foreach \b in {1,2,k} { \draw[link] (B\a) -- (C\b); }
+    \draw[link] (C\a) -- (O);
+  }
+  \foreach \a in {1,2,j,m} {
+    \draw[wp] (I\a) -- (Bk);
+    \draw[wv] (I\a) -- (B1)
+      node[pos=0.2, fill=white, inner sep=1pt, text=verde] {\footnotesize $w_{1\a}$};
+  }
+
+  % ---- Leyenda: qué hace cada neurona y qué significan los colores ----
+  \node[hid, minimum size=1cm] at (11.9, 4.4) {\normalsize $\Sigma\,|\,g$};
+  \node[anchor=west, align=left] at (12.6, 4.4)
+    {\small $\Sigma$: suma ponderada, $z^{(l)}=\sum_j w_j\,a_j$\\[2pt]
+     \small $g$: activaci\'on, $a^{(l)}=g\!\left(z^{(l)}\right)$};
+  \draw[wv] (11.4, 3.25) -- (12.4, 3.25);
+  \node[anchor=west, text=verde] at (12.6, 3.25)
+    {\small pesos de la neurona 1 (los que actualizamos)};
+  \draw[wp] (11.4, 2.65) -- (12.4, 2.65);
+  \node[anchor=west, text=violeta] at (12.6, 2.65)
+    {\small pesos de otra neurona (cada una tiene los suyos)};
+
+  % ---- Backpropagation: una llave bajo cada capa y flecha roja a sus factores ----
+  \pic at (4.6,  -3.6) {llave};
+  \pic at (8.8,  -3.6) {llave};
+  \pic at (13.0, -3.6) {llave};
+
+  % Factores de la regla de la cadena (izquierda a derecha = de adelante hacia atrás)
+  \node[deriv] (a1) at (3.7,  -6.8) {\large $\dfrac{\partial z^{(1)}}{\partial w_{1j}}$};
+  \node[deriv] (b1) at (5.5,  -6.8) {\large $\dfrac{\partial a^{(1)}}{\partial z^{(1)}}$};
+  \node[deriv] (a2) at (7.9,  -6.8) {\large $\dfrac{\partial z^{(2)}}{\partial a^{(1)}}$};
+  \node[deriv] (b2) at (9.7,  -6.8) {\large $\dfrac{\partial a^{(2)}}{\partial z^{(2)}}$};
+  \node[deriv] (a3) at (12.1, -6.8) {\large $\dfrac{\partial z^{(3)}}{\partial a^{(2)}}$};
+  \node[deriv] (b3) at (13.9, -6.8) {\large $\dfrac{\partial \hat{y}}{\partial z^{(3)}}$};
+  \node[deriv] (c4) at (17.6, -6.8) {\large $\dfrac{\partial \mathcal{L}}{\partial \hat{y}}$};
+
+  \node[deriv, left=2pt of a1] {\large $w_{1j} \leftarrow w_{1j} - \lambda$};
+  \foreach \p/\q in {a1/b1, b1/a2, a2/b2, b2/a3, a3/b3, b3/c4} {
+    \node[deriv] at ($(\p)!0.5!(\q)$) {\large $\cdot$};
+  }
+
+  \draw[back] (4.6,  -4.2) to[out=-90, in=90] ($(a1.north)!0.5!(b1.north)$);
+  \draw[back] (8.8,  -4.2) to[out=-90, in=90] ($(a2.north)!0.5!(b2.north)$);
+  \draw[back] (13.0, -4.2) to[out=-90, in=90] ($(a3.north)!0.5!(b3.north)$);
+  \draw[back] (Lo.south)   to[out=-90, in=90] (c4.north);
+
+  % ---- Flecha de propagación hacia atrás ----
+  \draw[back, line width=1.6pt] (19.0, -8.6) -- (-0.5, -8.6)
+    node[midway, fill=white, inner sep=3pt, text=retro]
+    {\large Propagaci\'on hacia atr\'as (backward): el gradiente se multiplica capa por capa};
+
+  % ---- Regla de la cadena completa ----
+  \node[caja] at (9.2, -10.7)
+    {\Large $\dfrac{\partial \mathcal{L}}{\partial w_{1j}}
+      = \dfrac{\partial \mathcal{L}}{\partial \hat{y}}\,
+        \dfrac{\partial \hat{y}}{\partial z^{(3)}}\,
+        \dfrac{\partial z^{(3)}}{\partial a^{(2)}}\,
+        \dfrac{\partial a^{(2)}}{\partial z^{(2)}}\,
+        \dfrac{\partial z^{(2)}}{\partial a^{(1)}}\,
+        \dfrac{\partial a^{(1)}}{\partial z^{(1)}}\,
+        \dfrac{\partial z^{(1)}}{\partial w_{1j}}$};
+
+\end{tikzpicture}

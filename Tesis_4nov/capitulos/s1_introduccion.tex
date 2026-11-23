@@ -1,0 +1,33 @@
+
+\label{sec:introduccion}
+
+En la última década, las redes neuronales profundas y los modelos de aprendizaje automático han alcanzado un rendimiento extraordinario en tareas complejas de visión por computadora, procesamiento de imágenes médicas y modelado físico-matemático mediante redes guiadas por la física (\textit{Physics-Informed Neural Networks}, PINNs). A pesar de estos avances significativos, la implementación práctica de estas herramientas en entornos de alta responsabilidad y riesgo crítico (\textit{safety-critical}), tales como el diagnóstico médico, la Tomografía Optoacústica (TOA), la caracterización vascular, el procesamiento de imágenes cardíacas o la detección por radar THz, enfrenta un obstáculo fundamental: la falta de confiabilidad en sus estimaciones puntuales. En aplicaciones biomédicas e industriales, una predicción puntual única $y = \hat{f}(x)$ resulta inherentemente insuficiente para la toma de decisiones clínicas o técnicas. Un sistema automatizado no solo debe proporcionar una estimación, sino también comunicar de manera transparente su grado de incertidumbre y el nivel de confianza asociado, siendo vital comprender cuándo un modelo es proclive a cometer un error o a generar estructuras espurias (hallucinated features), es decir, patrones o características visuales que no están presentes en el objeto físico real pero que son introducidas por el proceso de inferencia o reconstrucción.
+
+Las redes neuronales profundas modernas sufren sistemáticamente del fenómeno de excesiva confianza (\textit{overconfidence}) y mala calibración de sus salidas, tendiendo a asignar puntuaciones de probabilidad muy elevadas incluso en presencia de datos con ruido severo, artefactos de reconstrucción o entradas fuera de distribución (\textit{out-of-distribution}). Por otro lado, los métodos tradicionales de Cuantificación de Incertidumbre (\textit{Uncertainty Quantification}, UQ), tales como los enfoques Bayesianos (B-PINNs), el escalado de temperatura, el \textit{Monte Carlo Dropout} o los ensambles de redes, presentan limitaciones críticas relacionadas con elevados costos computacionales en inferencia, supuestos distribucionales Gaussianos no verificables y falta de garantías matemáticas para muestras finitas \cite{Yifan2025}. En modalidades como la Tomografía Optoacústica (TOA), donde la reconstrucción a partir de sinogramas es un problema inverso severamente mal condicionado y propenso a artefactos de visión limitada (\textit{limited-view}), una estimación de incertidumbre no calibrada puede inducir falsos positivos (simulando vasos sanguíneos inexistentes) o falsos negativos (ocultando estructuras patológicas).
+
+Para superar estas deficiencias, esta investigación adopta el marco de la Predicción Conforme (\textit{Conformal Prediction}, CP) y el Control de Riesgo Conforme (\textit{Conformal Risk Control}, CRC). CP es un paradigma no paramétrico y agnóstico del modelo que actúa como una envoltura (\textit{wrapper}) \textit{post-hoc} sobre cualquier red neuronal previamente entrenada, transformando mediante un conjunto de calibración independiente las predicciones puntuales en conjuntos o intervalos de predicción con garantías matemáticas de cobertura válidas para muestras finitas ($1 - \alpha$) bajo el supuesto de intercambiabilidad. Por su parte, CRC extiende este principio a funciones de pérdida continuas para acotar formalmente el riesgo esperado por debajo de un umbral predefinido. La brecha de investigación abordada reside en la necesidad de adaptar formalmente CP y CRC a problemas de transporte de onda (TOA/PINNs), segmentación médica multi-estructura (como imágenes cardíacas) y sensores físicos (radar THz) mediante el diseño de funciones de no-conformidad y cuantiles locales (\textit{Local CP}) capaces de adaptarse a la heterocedasticidad espacial y a variaciones complejas de ruido.
+
+
+El objetivo general de este trabajo es desarrollar y evaluar un marco unificado de cuantificación de incertidumbre y calibración \textit{post-hoc} basado en Predicción Conforme y Control de Riesgo Conforme, capaz de dotar a modelos de aprendizaje profundo y redes guiadas por la física de garantías estadísticas finitas y adaptabilidad local. Para validar la efectividad de este enfoque frente a distintos tipos de ruido y geometrías, el alcance experimental comprende tres escenarios de prueba diferenciados: la reconstrucción acústica en Tomografía Optoacústica (evaluando solucionadores FBPINNs y algoritmos DAS), la delimitación de estructuras anatómicas en imágenes médicas cardíacas con control de riesgo, y la estimación de señales físicas de alta frecuencia en sensores de radar THz.
+
+Las principales contribuciones de esta investigación incluyen: la formulación de un marco de calibración ligero y agnóstico del modelo que garantiza la cobertura deseada del $(1-\alpha)\%$ sin requerir reentrenar la red base; la integración de cuantiles locales (\textit{Local CP}) para absorber la heterocedasticidad espacial en solucionadores neuronales de ecuaciones diferenciales; y una evaluación empírica rigurosa que demuestra cómo corregir la sobreconfianza estructural de estos modelos a través de métricas de cobertura, desviación promedio (ACD) y eficiencia en el tamaño de los conjuntos.
+
+El trabajo se organiza secuencialmente comenzando con la fundamentación teórica de Predicción Conforme, intercambiabilidad y Control de Riesgo Conforme. 
+A continuación, se desarrollan los principios físicos del pipeline de Tomografía Optoacústica, segmentación de imagenes cardiacas y detección por radar THz. Posteriormente, se detalla la metodología de calibración propuesta, las funciones de no-conformidad y los mapas de riesgo adaptativo. Finalmente, se presentan y discuten los resultados experimentales en las tres modalidades analizadas, sintetizando las conclusiones principales y las líneas futuras de desarrollo.
+
+
+
+%$CORECCIONES$
+%https://arxiv.org/pdf/1609.00451
+
+%  Yo haría más teórica la intro. 
+%  
+%  Así como está no se entiende por que no eligiría un C=Y y ya está (tiene proba 1).
+%  
+%  Yo te diría que introduzcas con Least Ambiguos Classifier y demuestres en que sentido esto es óptimo.
+%  
+%  Lo podés leer en "Least Ambiguous Set-Valued Classifiers with Bounded Error Levels"  de Sadinle (teorema 1).
+%  
+%  Debe haber algo similar para regresión, hay que buscar y ampliar.
+%  
+%  Ya habiendo leído todo, me parece que falta un plan sobre que querés contar en este capítulo. Tiene que entenderse cuál es el hilo conector de la historia que estás contando

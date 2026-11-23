@@ -1,0 +1,317 @@
+\label{cap:pipeline_toa}
+
+La Tomografía Optoacústica (TOA) es una técnica híbrida de generación de imágenes de tejido biológico basada en el fenómeno físico denominado efecto optoacústico (OA) \cite{DiLiscia2026}. Cuando un haz de luz láser ilumina tejido blando, parte de la energía electromagnética que transporta es absorbida por los cromóforos presentes y posteriormente transformada en calor.
+
+Este proceso de deposición de energía ocurre en una escala de tiempo sustancialmente menor que la requerida para que la densidad del medio se modifique o el tejido se desplace apreciablemente. En consecuencia, el proceso puede considerarse como isocórico (bajo condiciones de confinamiento térmico y de estrés), induciendo un incremento local de presión instantáneo. Dada la elasticidad propia de los tejidos blandos, este pico de presión genera una onda acústica ultrasónica que se propaga hacia la superficie del medio. Por lo tanto, es posible caracterizar la estructura y composición del tejido a partir de la estimación de dicha distribución inicial de presión $p_0(\mathbf{x})$.
+
+A diferencia de modalidades de diagnóstico como la tomografía computarizada (TC) convencional, la TOA no emplea radiación ionizante, lo que la convierte en una técnica intrínsecamente segura y no invasiva.
+Además, demuestra ser sumamente prometedora para caracterizar la anatomía vascular superficial gracias al elevado contraste derivado de la fuerte absorción óptica de la hemoglobina en la sangre, habiendo sido empleada con éxito en la caracterización de la microcirculación \textit{in vivo} en modelos animales \cite{DiLiscia2026}.
+
+\section{Física del problema y Efecto Optoacústico}
+\label{sec:fisica_problema}
+El efecto optoacústico consiste fundamentalmente en la conversión de energía óptica incidente en energía acústica propagable. Cuando una muestra de tejido es irradiada con un pulso láser corto, las moléculas absorbentes convierten dicha energía en un gradiente térmico que desencadena una expansión termoelástica y, en consecuencia, genera una onda de presión. Colocar sensores (transductores) de manera estratégica alrededor de la muestra permite registrar el campo de ondas de sonido saliente para, mediante el uso de algoritmos de reconstrucción inversa, generar una imagen cuantitativa de la zona de interés.
+En la Figura \ref{fig:TOA_EO} se aprecia un diagrama esquemático de este fenómeno.
+
+Cuando la generación de calor ocurre lo suficientemente rápido como para que las fuentes térmicas y de presión no se desplacen durante la duración del pulso, el perfil de la distribución inicial de fotones absorbidos coincide con el perfil de la presión inicial. De este modo, resolver el problema de reconstrucción de imagen resulta equivalente a hallar la distribución espacial de la presión inicial $p_0(\mathbf{x})$.
+
+\begin{figure}[H]
+    \centering
+    \resizebox{0.95\textwidth}{!}{%
+        \input{img_tex/TOA_onda_rebote}%
+    }%
+    \caption{Esquema del efecto optoacústico y generación de ondas de presión en tejido biológico \cite{DiLiscia2026}.}
+    \label{fig:TOA_EO}
+\end{figure}
+
+Asumiendo un medio de propagación homogéneo, no disipativo y con velocidad del sonido constante $c$, la propagación de la onda de presión recibida por los transductores fuera de la región de excitación se modela mediante el siguiente problema de valor inicial (PVI) para la ecuación de onda homogénea \cite{DiLiscia2026}:
+
+\begin{align}
+    \nabla^2 p(\mathbf{x}, t) - \frac{1}{c^2} \frac{\partial^2 p(\mathbf{x}, t)}{\partial t^2} &= 0, \label{eq:onda_homogenea}
+    \\
+    p(\mathbf{x}, 0) &= p_0(\mathbf{x}), \label{eq:pvi_p0}
+    \\
+    \left. \frac{\partial p(\mathbf{x}, t)}{\partial t} \right|_{t=0} &= 0.
+    \label{eq:pvi_v0}
+\end{align}
+
+Para modelar la propagación de la señal se parte de las condiciones iniciales y de contorno del sistema: la Ecuación \ref{eq:pvi_p0} establece que el campo de presión en $t=0$ corresponde a la presión inicial $p_0(\mathbf{x})$ en todo el dominio, mientras que la Ecuación \ref{eq:pvi_v0} asume que la velocidad de cambio de la presión en $t=0$ es nula debido al confinamiento de estrés.
+Se considera que el pulso láser es de duración ultracorta (modelable como una delta de Dirac en el dominio temporal), y que los puntos de medición de los sensores se ubican fuera de la zona de excitación óptica.
+
+
+%%-------------------------------------------------------
+%           PROBLEMA DIRECTO
+%%-------------------------------------------------------
+\section{Modelo Discreto Matricial y Construcción del Sinograma}
+
+En la Figura \ref{fig:TOA_2D_lab}
+
+\begin{figure}[H]
+    \centering
+    \resizebox{0.55\textwidth}{!}{%
+        \input{img_tex/TOA/esquema_sensores2d}%
+    }%
+    \caption{Esquema 2d.}
+    \label{fig:TOA_2D_lab}
+\end{figure}
+
+En un sistema experimental real, el campo de presión $p(\mathbf{x}, t)$ es detectado por un arreglo de $N_s$ transductores situados alrededor de la muestra. Matemáticamente, la respuesta continua de los sensores $p_d$ se describe como:
+
+\begin{equation}
+    p_d = W S p + \epsilon,
+    \label{eq:modelo_sensor_continuo}
+\end{equation}
+
+donde $S$ es un operador de selección espacial, $W$ representa la respuesta electroacústica e impulsional del sensor (dependencia angular y respuesta en frecuencia) y $\epsilon$ es el ruido aditivo de medición.
+
+Al discretizar la grilla espacial del tejido en $N = n_x \times n_y$ píxeles y registrar $N_t$ muestras temporales para cada uno de los $N_s$ sensores, la relación entre la presión inicial y las mediciones se formula de forma discreta matricial mediante:
+
+\begin{equation}
+    G = M p_0,
+    \label{eq:modelo_discreto_matricial}
+\end{equation}
+
+donde $p_0 \in \mathbb{R}^{N \times 1}$ es el vector que contiene la presión inicial en cada punto de la grilla, $G \in \mathbb{R}^{N_t N_s \times 1}$ es el vector de mediciones aplanado y $M \in \mathbb{R}^{N_t N_s \times N}$ es la matriz del sistema (o matriz del modelo), que almacena la respuesta impulsional de cada punto de la grilla hacia cada sensor.
+
+Al reordenar el vector de mediciones $G$ en una matriz de dimensiones $N_s \times N_t$, se obtiene la representación bidimensional denominada \textbf{sinograma}. Cada fila del sinograma representa la historia temporal registrada por un transductor específico, constituyendo la entrada fundamental para los algoritmos de reconstrucción de imagen.
+
+
+
+%%------------------------------------------------------------
+%                  PINN y FBPINN (Tesis Di Liscia)
+%%-----------------------------------------------------------
+
+\section{Redes Neuronales Guiadas por la Física (PINNs)}
+
+Las redes neuronales guiadas por la física (\textit{Physics-Informed Neural Networks}, PINNs) surgen como una alternativa eficiente frente a la necesidad de grandes volúmenes de datos etiquetados para entrenar modelos en problemas físicos. Aprovechando la capacidad de realizar autodiferenciación de manera eficiente, las PINNs incorporan las ecuaciones diferenciales que rigen el sistema físico directamente dentro del proceso de aprendizaje.
+
+Dado un sistema físico descrito por una ecuación diferencial en forma residual:
+\begin{equation}
+    F\left( u, x_1, x_2, \dots, x_d, \left\{ \frac{\partial^k u}{\partial x_l^k} \right\}_{k=1, l=1}^{M, d} \right) = 0
+\end{equation}
+donde $u(x_1, \dots, x_d)$ es la solución buscada sobre el dominio $\Omega$, $d$ es la dimensión espacial/temporal y $M$ es el orden máximo de derivación.
+
+Para resolver la ecuación diferencial mediante una red neuronal, la función de pérdida total ($\mathcal{L}$) se formula combinando el residuo de la ecuación diferencial dentro del dominio ($\mathcal{L}_{\text{PDE}}$) y el ajuste a las condiciones de contorno o datos disponibles ($\mathcal{L}_{\text{data}}$):
+\begin{equation}
+    \mathcal{L} = \lambda_{\text{PDE}} \cdot \mathcal{L}_{\text{PDE}} + \lambda_{\text{data}} \cdot \mathcal{L}_{\text{data}}
+\end{equation}
+donde $\lambda_{\text{PDE}}$ y $\lambda_{\text{data}}$ son constantes de ponderación. Mediante autodiferenciación, la red calcula no solo los gradientes respecto a sus parámetros en la etapa de retropropagación, sino también las derivadas parciales exactas de la salida respecto a las variables de entrada.
+
+En \cite{tesisDiliscia} se distinguen dos variantes principales para el tratamiento de las condiciones de contorno:
+\begin{itemize}
+    \item \textbf{Vanilla PINNs:} Muestrean $N$ puntos dentro del dominio y $M$ puntos en la frontera, penalizando explícitamente el incumplimiento de las condiciones de contorno en la función de pérdida ($\mathcal{L}_{\text{data}}$).
+    \item \textbf{Hard PINNs (Restricción Dura):} Definen la salida final del modelo $u_\theta(x)$ mediante una transformación analítica de la forma:
+    \begin{equation}
+        u_\theta(x) = A(x) + B(x) u^*_\theta(x)
+    \end{equation}
+    donde $u^*_\theta(x)$ es la salida directa del perceptrón multicapa, y $A(x), B(x)$ son funciones elegidas de forma tal que $u_\theta(x)$ satisface las condiciones de contorno por construcción analítica. De este modo, la optimización se simplifica al requerir únicamente la penalización de $\mathcal{L}_{\text{PDE}}$ dentro del dominio.
+\end{itemize}
+
+\subsection{Limitaciones de las PINNs y Sesgo Espectral}
+Pese a sus ventajas, las PINNs convencionales presentan ciertas limitaciones en la práctica. La definición de la función de pérdida puede provocar rigidez en los gradientes calculados por retropropagación, derivando en convergencias lentas o desbalances entre términos. Asimismo, enfrentan severas dificultades al escalar a dominios espaciotemporales grandes, ya que la complejidad de la solución exige un incremento sustancial en el número de parámetros. Esto se ve agravado por el fenómeno del \textbf{sesgo espectral} (\textit{spectral bias}), la tendencia intrínseca de las redes neuronales profundas a aprender con mayor facilidad las componentes de baja frecuencia antes que las de alta frecuencia.
+
+\section{FBPINNs: Redes Neuronales Guiadas por la Física de Base Finita}
+
+Para superar las limitaciones de escala y el sesgo espectral de las PINNs clásicas, surgen las redes neuronales guiadas por la física de base finita (\textit{Finite Basis Physics-Informed Neural Networks}, FBPINNs). La metodología central consiste en descomponer el dominio global de trabajo en $S$ \textbf{subdominios superpuestos}, asignando una red neuronal independiente $u_{s,\theta}$ a cada uno de ellos.
+
+Al dividir el dominio, la señal que procesa cada subred individual "ve" una frecuencia relativa menor a la del dominio global, atacando de manera estructural el problema del sesgo espectral. La solución global reconstruida $u_\theta(x)$ se expresa como la combinación de las salidas locales:
+\begin{equation}
+    u_\theta(x) = \sum_{s=1}^{S} W_s(x) \cdot \operatorname{unnorm}\left( u_{s,\theta}\left( \operatorname{norm}_s(x) \right) \right)
+\end{equation}
+
+Las características clave expuestas en la tesis para el funcionamiento de las FBPINNs comprenden:
+\begin{enumerate}
+    \item \textbf{Normalización Local ($\operatorname{norm}_s$):} Cada entrada $x$ se normaliza independientemente al rango $[-1, 1]$ dentro del subdominio $s$, lo que contribuye a mitigar el sesgo espectral.
+    \item \textbf{Funciones Ventana ($W_s$):} Confina suavemente la solución de la subred $u_{s,\theta}$ a su área de cobertura y asegura que el acoplamiento entre subdominios superpuestos sea continuo y continuamente derivable.
+    \item \textbf{Superposición sin Términos de Interfaz:} El proceso de optimización se evalúa directamente sobre la salida global combinada $u_\theta(x)$, logrando que las subredes aprendan a coordinar sus salidas en las fronteras sin necesidad de añadir términos de penalización de interfaz adicionales.
+    \item \textbf{Uso de Planificador (\textit{Scheduler}):} Para evitar caer en mínimos locales no deseados en dominios extendidos, se puede emplear un esquema de entrenamiento flexible. Este permite entrenar progresivamente las redes de los subdominios iniciales (donde se ubica la condición inicial o de contorno) e ir habilitando secuencialmente las subredes adyacentes a lo largo del dominio.
+\end{enumerate}
+
+Gracias a esta descomposición, las FBPINNs permiten emplear arquitecturas locales livianas (como pequeños perceptrones multicapa con pocas neuronas por capa) para resolver eficientemente ecuaciones diferenciales complejas sobre dominios extensos.
+
+
+
+
+%%------------------------------------------------------------
+%                  PIPELINE
+%%-----------------------------------------------------------
+
+\section{Pipeline de Inferencia para la Simulación Directa 2D}
+
+El objetivo fundamental del pipeline de inferencia consiste en obtener el sinograma completo $G$ de la onda acústica recibida por los sensores ante una condición inicial arbitraria $p_0(\mathbf{x})$ (que representa la forma anatómica del tejido) sin necesidad de reentrenar la red neuronal para cada nueva imagen.
+ Para ello, se integra la FBPINN entrenada para una única función base de referencia con las propiedades matemáticas de linealidad e invariancia espacial de la ecuación de onda \ref{eq:onda_homogenea}.
+
+En la Figura~\ref{fig:TOA_sin} se esquematiza el flujo secuencial de bloques de este proceso de inferencia, cuyos pasos detallados se describen a continuación.
+
+\begin{figure}[H]
+    \centering
+    \resizebox{0.95\textwidth}{!}{%
+        \input{img_tex/esquema_inf_sinugrama}%
+    }%
+    \caption{Esquema del flujo de pasos en inferencia para la simulación de propagación de onda en dos dimensiones y generación del sinograma \cite{DiLiscia2026}.}
+    \label{fig:TOA_sin}
+\end{figure}
+
+
+\section{Obtención de Coeficientes Mediante el Optimizador}
+
+Dada una imagen de presión inicial elegida $p_0(\mathbf{x})$, el primer paso consiste en descomponerla como una combinación lineal de una familia de funciones base $b_{\mu_i}(\mathbf{x})$ (pulsos gaussianos de desvío $\sigma$):
+
+\begin{equation}
+    p_0(\mathbf{x}) \approx \sum_{i=1}^M a_i \, b_{\mu_i}(\mathbf{x}).
+    \label{eq:descomposicion_p0}
+\end{equation}
+
+Para determinar las amplitudes $a_i$ y los centros o posiciones $\mu_i$ de cada pulso de la base en imágenes bidimensionales, se formula el siguiente problema de minimización en norma $L_2$:
+
+\begin{equation}
+    \arg\min_{a_j, \mu_j} \sum_{i=1}^N \left| p_0(\mathbf{x}_i) - \sum_{j=1}^M a_j \, b_{\mu_j}(\mathbf{x}_i) \right|^2.
+    \label{eq:opt_coeficientes_2d}
+\end{equation}
+
+La resolución de la Ecuación~\ref{eq:opt_coeficientes_2d} se ejecuta en GPU a través de la librería PyTorch empleando el optimizador \textbf{Adam}. Con el fin de evitar que la búsqueda quede atrapada en mínimos locales debido a la no convexidad del problema, se aplican técnicas de \textit{annealing} del \textit{learning rate}, adaptando dinámicamente el tamaño de paso en función de umbrales predefinidos sobre el valor de la función de pérdida.
+
+\section{Evaluación de la FBPINN y Extensión a Dominio Mayor}
+
+En lugar de evaluar la FBPINN en toda la grilla espacial, la inferencia se restringe a realizar un \textit{forward pass} liviano exclusivamente sobre las coordenadas de los $N_s$ sensores ultrasónicos dispuestos alrededor del medio, obteniendo el sinograma base $s_0(t)$ producido por una única fuente centrada en el origen.
+
+Debido a que la FBPINN se entrena en un dominio espacial y temporal acotado para acelerar la convergencia, se aplica el Algoritmo~\ref{alg:extension_sinograma} (Extensión de sinograma) para llevar la solución al dominio físico real del tomógrafo ($100\text{ mm} \times 100\text{ mm}$ y $t_{\text{end}} = 100\text{ }\mu\text{s}$). Dado que el campo de onda en los sensores tiende a cero tras el paso de la perturbación principal, se realiza un relleno con ceros (\textit{padding}) y se rescala la amplitud por la relación $\sqrt{r / r_{\text{new}}}$ para compensar la atenuación geométrica $1/\sqrt{r_0}$ propia de las ondas circulares bidimensionales .
+
+\section{Generación de Funciones Base y Suma Lineal}
+
+Una vez obtenido el sinograma base extendido, se invoca el Algoritmo~\ref{alg:desplazamiento_sinograma} (Desplazamiento de sinograma). Este algoritmo aprovecha la invariancia espacial para recalcular el retardo temporal $\Delta t_i$ y la distancia $r_j$ desde cada nueva posición de fuente $\mu_j$ (hallada por el optimizador) hacia cada transductor $S_i$, desplazando temporalmente las señales y reescalando sus amplitudes según:
+
+\begin{equation}
+    s_i^j(t) = \sqrt{\frac{r_0}{r_j}} \, s_i^0(t - t_d).
+    \label{eq:relacion_sinogramas}
+\end{equation}
+
+Finalmente, invocando la propiedad de linealidad de la ecuación de onda, el sinograma completo final $G$ correspondiente a la condición inicial $p_0(\mathbf{x})$ se genera multiplicando cada sinograma desplazado por su respectivo coeficiente $a_j$ y sumando linealmente todas las contribuciones \cite{87, 107, 128}:
+
+\begin{equation}
+    G(t) = \sum_{j=1}^M a_j \, s^j(t).
+    \label{eq:suma_sinogramas_lineal}
+\end{equation}
+
+\section{Algoritmos de Procesamiento de Sinogramas}
+
+A continuación se presentan los pseudocódigos de las rutinas auxiliares empleadas en el flujo de inferencia:
+
+\begin{algorithm}[H]
+\caption{Extensión de sinograma}
+\label{alg:extension_sinograma}
+\begin{algorithmic}
+\STATE Agregar muestras en cero de acuerdo al nuevo tiempo final $t_{\text{end}}$.
+\STATE Obtener desplazamiento temporal global en muestras $\text{shift}$ en base a la nueva posición de los sensores.
+\IF{$\text{shift} > \text{shift}_{\max}$}
+    \STATE \textbf{ERROR}
+\ENDIF
+\STATE Desplazar temporalmente $\text{shift}_i$ muestras.
+\STATE Escalar amplitud por $\sqrt{r / r_{\text{new}}}$.
+\IF{$\text{resample} == \text{True}$}
+    \STATE Hacer remuestreo en base a la cantidad de muestras pasadas por parámetro para preservar la dimensión del sinograma.
+\ENDIF
+\RETURN $s_{\text{new}}, t$
+\end{algorithmic}
+\end{algorithm}
+
+\begin{algorithm}[H]
+\caption{Desplazamiento de sinograma}
+\label{alg:desplazamiento_sinograma}
+\begin{algorithmic}
+\STATE Crear copia del sinograma original $s_{\text{new}}$.
+\FOR{$i = 1, 2, \dots, N_s$ con posiciones de sensores $\mathbf{x}_{\text{sens}}$}
+    \STATE Calcular la nueva distancia al centro de la fuente $r_{\text{new}}$.
+    \STATE Obtener el retardo en muestras temporales $\text{shift}_i$.
+    \STATE Desplazar temporalmente $\text{shift}_i$ muestras.
+    \STATE Escalar por $\sqrt{r_0 / r_{\text{new}}}$.
+    \IF{$\text{shift}_i > 0$}
+        \STATE Completar al final con ceros.
+    \ELSE
+        \STATE Completar al comienzo con ceros.
+    \ENDIF
+\ENDFOR
+\RETURN $s_{\text{new}}$
+\end{algorithmic}
+\end{algorithm}
+
+
+
+
+%%------------------------------------------------------------
+%                  PROBALEMA INVERSO
+%%-----------------------------------------------------------
+\section{El Problema Inverso y Reconstrucción de Imágenes}
+
+Mientras que el problema directo describe la generación y propagación de la onda de presión a partir de una condición inicial conocida, la práctica clínica y experimental requiere resolver el \textbf{problema inverso}: reconstruir la distribución espacial de la presión inicial $p_0(\mathbf{x})$ (o las propiedades ópticas del tejido) a partir de las señales acústicas discretas medidas por los transductores \cite{DiLiscia2026}.
+
+El problema inverso en TOA se divide conceptualmente en dos etapas secuenciales \cite{DiLiscia2026}:
+\begin{enumerate}
+    \item \textbf{Inversión acústica:} Consiste en estimar la distribución inicial de presión $p_0(\mathbf{x})$ a partir del sinograma medido $G$.
+    \item \textbf{Inversión óptica:} Consiste en recuperar cuantitativamente los mapas de propiedades ópticas del tejido —en particular, el coeficiente de absorción $\mu_a(\mathbf{x})$— a partir de la presión inicial reconstruida $p_0(\mathbf{x})$ y del modelado de la fluencia fotónica $\phi(\mathbf{x})$.
+\end{enumerate}
+
+Para la reconstrucción acústica de la imagen $p_0(\mathbf{x})$, existen diversas familias de algoritmos en la literatura, las cuales se describen a continuación.
+
+\section{Algoritmos en el Dominio del Tiempo: Retroproyección (Back-Projection) y Delay and Sum (DAS)}
+Los métodos de retroproyección proyectan las señales unidimensionales registradas por los sensores de vuelta en el espacio tridimensional o bidimensional, respetando el principio de tiempo de vuelo de la onda ultrasónica \cite{DiLiscia2026}.
+
+Dentro de esta familia destaca el algoritmo \textbf{Delay and Sum (DAS)} debido a su simplicidad, bajo costo computacional e intuitiva interpretación física. El algoritmo funciona aplicando retardos temporales $\Delta t_i$ a las señales recibidas por cada transductor para enfocarlas en un punto específico del espacio. Evaluando el proceso en $t = 0$, la estimación de la presión inicial en un punto particular de la grilla se expresa como \cite{DiLiscia2026}:
+
+\begin{equation}
+    s_{\text{DAS--inicial}}(\mathbf{x}) = \sum_{i=1}^{N_s} a_i \, s'_i(\Delta t_i),
+    \label{eq:das_inicial}
+\end{equation}
+
+donde $N_s$ es el número de transductores, $s'_i$ es la salida filtrada o preprocesada del $i$-ésimo sensor, $a_i$ es un coeficiente de apodización y $\Delta t_i = \|\mathbf{x} - \mathbf{x}_i\| / c$ representa el tiempo de vuelo de la onda desde el punto $\mathbf{x}$ hasta la posición del sensor $\mathbf{x}_i$ a la velocidad del sonido $c$ \cite{DiLiscia2026}.
+
+A pesar de su eficiencia y capacidad para resaltar estructuras anatómicas principales, DAS presenta limitaciones importantes: genera artefactos de baja frecuencia, menor contraste y fuertes lóbulos laterales en presencia de datos ruidosos o geométricamente incompletos \cite{DiLiscia2026}.
+
+\section{Métodos Basados en Modelos (Model-Based Inversion)}
+Estos enfoques formulan la reconstrucción como la inversión explícita del modelo discreto matricial formulado previamente ($G = M p_0 + \epsilon$). Dado que la matriz del sistema $M \in \mathbb{R}^{N_t N_s \times N}$ suele estar mal condicionada o no ser cuadrada, la inversión se plantea como un problema de optimización regularizado en norma $L_2$ \cite{DiLiscia2026}:
+
+\begin{equation}
+    \hat{p}_0 = \arg\min_{p_0} \left( \|G - M p_0\|_2^2 + \lambda \|p_0\|_2^2 \right),
+    \label{eq:opt_model_based}
+\end{equation}
+donde $\lambda \ge 0$ es el parámetro de regularización de Tikhonov encargado de estabilizar la solución frente al ruido de medición. La solución analítica de este problema viene dada por \cite{DiLiscia2026}:
+
+\begin{equation}
+    \hat{p}_0 = \left( M^T M + \lambda I \right)^{-1} M^T G.
+    \label{eq:solucion_model_based}
+\end{equation}
+
+Aunque estos métodos ofrecen un rigor matemático elevado y mitigan artefactos de retroproyección, su principal desventaja radica en la alta carga computacional ($\mathcal{O}(N^3)$ a $\mathcal{O}(N^9)$) y la elevada memoria requerida para almacenar e invertir la matriz del sistema en grillas tridimensionales complejas \cite{DiLiscia2026}.
+
+
+\section{Imperfecciones en los Datos Medidos}
+
+En entornos reales, las condiciones ideales son difíciles de implementar, por lo que uno de los principales problemas en la reconstrucción es manejar y lidiar con datos insuficientes o incompletos.
+
+Para la inversión acústica, los motivos que causan imperfecciones en los datos medidos son:
+
+\begin{itemize}
+    \item \textbf{Ruido.}
+    \item \textbf{Respuestas de los detectores:} Las respuestas en frecuencia de los detectores nunca son perfectamente omnidireccionales y de banda ancha.
+    \item \textbf{Detección con visión limitada (\textit{Limited-View}):} Cobertura incompleta del objeto.
+    \item \textbf{Submuestreo en el dominio del espacio o del tiempo.}
+\end{itemize}
+
+Por su parte, para la inversión óptica, los datos de entrada (las imágenes de la presión inicial obtenidas de la inversión acústica) pueden resultar deficientes por:
+
+\begin{itemize}
+    \item Artefactos presentes en la imagen por una reconstrucción pobre.
+    \item Ausencia de un conjunto de longitudes de onda tal que el aspecto espectroscópico del problema óptico esté bien condicionado.
+\end{itemize}
+
+
+
+\section{Setup de labortatorio - posiblemente lo elimine}
+
+\begin{figure}[H]
+    \centering
+    \resizebox{0.55\textwidth}{!}{%
+        \input{img_tex/TOA/esquema_sensor3d}%
+    }%
+    \caption{Esquema 3D.}
+    \label{fig:TOA_3D_lab}
+\end{figure}
