@@ -188,11 +188,11 @@ Este flujo establece una plantilla estándar de calibración: cualquier variante
     \label{fig:conformal_prediction}
 \end{figure}
 
-El proceso de calibración en el \ref{alg:conformal_prediction} parte del supuesto de intercambiabilidad del conjunto de datos, que es un supuesto mas general que el de iid.
+El Algoritmo~\ref{alg:conformal_prediction} está pensado usualmente para el caso de clasificación. Este flujo también se representa en la Figura~\ref{fig:conformal_prediction}, donde nos interesa analizar el lado izquierdo.
 
-Luego con los datos se debe generar los scores de no conformidad, producto de evaluar los datos en el modelo $\hat{f}$ y extraer del mismo predicciones o scores (salida de softmax) para asi obtener los  scores de no conformidad mediante la funcion de no confomidad seleccionada.
+Para aplicarlo, se evalúan los datos en el modelo $\hat{f}$ con el fin de extraer sus predicciones o salidas (como la salida de \textit{softmax}) y calcular así las puntuaciones mediante la función de no conformidad seleccionada.
 
-Para el caso de clasificación este funcion de no conformidad puede ser $s(x_i,y_i) = \mathbf{P}(y_i=0  | x_i) = 1 - \mathbf{P}(y_i=1 | x_i)$ (denotado $\hat{\pi}(y|x)$) o para el caso de calibración en regresión puede ser $s(x_i,y_i) = \mid y_i - \hat{y} \mid$ ambas funciones expresan una funcion de no conformidad el cual se las cuales se usaran para decidir que muestras del conjunto de datos de prediccion van a parar dentro del conjunto de prediccion.
+En el caso de clasificación, esta función puede definirse como $s(x_i,y_i) = \mathbf{P}(y_i=0 \mid x_i) = 1 - \mathbf{P}(y_i=1 \mid x_i)$ (con probabilidad denotada $\hat{\pi}(y \mid x)$), mientras que para la calibración en regresión puede utilizarse $s(x_i,y_i) = |y_i - \hat{y}|$. En ambos casos, la función de no conformidad se emplea para decidir qué muestras se incluyen dentro del conjunto de predicción.
 
 \section{Split conformal predictión}
 
@@ -212,17 +212,11 @@ se reentrena el modelo predictivo $\hat{f}_y$ desde cero sobre ese conjunto y se
 las puntuaciones de no conformidad. Si bien este procedimiento aprovecha la totalidad 
 de los datos para el entrenamiento, resulta computacionalmente prohibitivo en la práctica: 
 en problemas de regresión continua exige ajustar el modelo infinitas veces por cada muestra 
-de prueba[cite: 5, 6], y en aprendizaje profundo vuelve inviable el costo de reentrenar redes 
+de prueba, y en aprendizaje profundo vuelve inviable el costo de reentrenar redes 
 neuronales complejas o redes guiadas por la física (PINNs) en tiempo de inferencia.
 
-[ACAAAAAAAAAAAAAAAAAAAAAAAA ME QUEDE]
-
-
-En el algortimo \ref{alg:conformal_prediction} se mostró el caso general enfocado en clasificación, en la practica se suele hablar de split conformal predictión (SCP), surge a partir del algortimo full conformal prediction que proponia entrenar multiples veces el modelo $\hat{f}$.
-
 En este caso se parte de un set de datos $(X_i, Y_i)_{i=1,2, \dots n}$ el modelo se entrena una vez con los datos $(X_i, Y_i)_{i=1,2, \dots n/2}$ y se calibra con $(X_i,Y_i)_{i=n/2 + 1, \dots , n}$
-
-Se considera el problema de regresión donde $\mathcal{X} \in \mathbb{R}$
+Se considera el problema de regresión donde $\mathcal{X} \in \mathbb{R}$.
 
 
 
@@ -241,10 +235,9 @@ Se considera el problema de regresión donde $\mathcal{X} \in \mathbb{R}$
     \end{algorithmic}
 \end{algorithm}
 
-El algortimo dos a diferencia del \ref{alg:conformal_prediction} el conjunto de prediccion devuelto es un intervalo $\mathcal{C}(X_{n+1}) = [\hat{f}(X_{n+1}) - \hat{q}, \hat{f}(X_{n+1}) + \hat{q}]$ el cual representa la incerteza alrededor de la prediccion $\hat{f}(X_{n+1})$ para el target $Y_{n+1}$.
+El algortimo \ref{alg:conformal_prediction_esp} a diferencia del algoritmo \ref{alg:conformal_prediction} el conjunto de prediccion devuelto es un intervalo $\mathcal{C}(X_{n+1}) = [\hat{f}(X_{n+1}) - \hat{q}, \hat{f}(X_{n+1}) + \hat{q}]$ el cual representa la incerteza alrededor de la prediccion $\hat{f}(X_{n+1})$ para el target $Y_{n+1}$.
 
-El valor de $\hat{q}$ es una constante que se calcula con los datos de calibración $(X_i,Y_i)_{i=n/2, \dots, n}$ y en esos datos se eleigio $\hat{q}$ de forma que cumpla que los $Y_i$ esten contenidos en el intervalo una fracción de $1-\alpha$
-siendo los datos iid luego cualquier nueva prediccion va a cumplir la garantia marginal.
+El valor de $\hat{q}$ es una constante que se calcula con los datos de calibración $(X_i,Y_i)_{i=n/2, \dots, n}$ y en esos datos se eleigio $\hat{q}$ de forma que cumpla que los $Y_i$ esten contenidos en el intervalo una fracción de $1-\alpha$. siendo los datos iid luego cualquier nueva prediccion va a cumplir la garantia marginal.
 
 
 \begin{algorithm}[H]
@@ -252,160 +245,163 @@ siendo los datos iid luego cualquier nueva prediccion va a cumplir la garantia m
 \label{alg:conformal_prediction_gen}
     \begin{algorithmic}[1]
     \STATE \textbf{Construcción de la función de puntuación:} Utilizar los datos $(X_i, Y_i)$ para $i = 1, \dots, n/2$ para construir una \textbf{score de no conformida} $s : \mathcal{X} \times \mathcal{Y} \to \mathbb{R}$.
-    La intuición es que $s(x, y)$ mide qué tan "inusual"  es el punto $(x, y)$ basándose en un modelo ajustado con los datos de esta primera mitad.
 
     \STATE \textbf{Cálculo de puntuaciones:} Para $i = n/2 + 1, \dots, n$, calcular la puntuación $S_i = s(X_i, Y_i)$ para cada dato en el conjunto de calibración.
 
-    \STATE \textbf{Cálculo del cuantil:} Ordenar las puntuaciones $S_{n/2+1}, \dots, S_n$ en orden creciente, y definir $\hat{q}$ como el elemento de valor $\lceil(1 - \alpha)(\frac{n}{2} + 1)\rceil$ en la lista ordenada.
+    \STATE \textbf{Cálculo del cuantil:} Ordenar las puntuaciones $S_{n/2+1}, \dots, S_n$ en orden creciente, y definir $\hat{q}$ como el cuantil empirico de nivel $\lceil(1 - \alpha)(\frac{n}{2} + 1)\rceil$ en la lista ordenada.
 
     \STATE \textbf{Inferencia:} Devolver el conjunto de predicción $\mathcal{C}(X_{n+1}) = \{y \in \mathcal{Y} : s(X_{n+1}, y) \leq \hat{q}\}$.
     \end{algorithmic}
 \end{algorithm}
 
-En el algortimo 3 vemos que en realidad SCP no es solo de regresion sino que se ajusta a los dos casos vistos en este problema, y en general todos los otros casos que veremos en siguientes secciones se deberian poder aplicar para ambos problemas de calibración.
+La intuición de $s(x, y)$ es que mide qué tan ``inusual'' es el punto $(x, y)$ basándose en un modelo ajustado con los datos de esta primera mitad.
 
+En el Algoritmo~\ref{alg:conformal_prediction_gen} vemos que este método no es solo de regresión, sino que se ajusta a ambos casos (clasificación y regresión). En general, todas las variantes que veremos en las siguientes secciones también pueden aplicarse a ambos problemas de calibración.
 
-\section{Scores de no conformidad}
+\section{Puntuaciones de no conformidad}
 
-Los \textbf{scores de no conformidad} son el concepto fundamental del marco de predicción conforme.
+Las \textbf{puntuaciones de no conformidad} constituyen el elemento central del marco de la Predicción Conforme. Formalmente, se definen mediante una función $s(x, y)$ diseñada de modo tal que valores más altos indiquen una mayor discrepancia entre el par $(x, y)$ y el comportamiento aprendido por el modelo en los datos de entrenamiento. En términos prácticos, esta función actúa como una métrica que cuantifica el error o la falta de ajuste del predictor frente a una observación dada.
 
-Se definen como una función $s(x, y)$ diseñada de tal manera que \textbf{valores más altos indican que el punto de datos $(x, y)$ no concuerda con las tendencias observadas} en los datos de entrenamiento.
+Una propiedad destacable de este enfoque es su flexibilidad: es posible emplear prácticamente cualquier función de puntuación, ya que, siempre que se preserve la simetría respecto al orden de los datos, el procedimiento garantiza matemáticamente el nivel de cobertura marginal $1-\alpha$, independientemente de cuán preciso o deficiente sea el modelo base. Sin embargo, aunque la validez estadística está asegurada por construcción, la elección específica de $s(x, y)$ resulta determinante en la práctica. Una función de no conformidad bien diseñada permite aprovechar la información del predictor para generar conjuntos o intervalos de predicción más estrechos y precisos. En la literatura del área, esta cualidad de minimizar la amplitud o el tamaño del conjunto devuelto sin perder el nivel de cobertura exigido se denomina \textbf{eficiencia}.
 
-\begin{itemize}
-    \item Propósito: Actúa como una métrica que mide qué tan grande es el error del modelo en un dato nuevo frente a los datos con los que fue entrenado.
+\subsection{Funciones de puntuación en regresión}
 
-    \item Flexibilidad y Garantía: Puedes elegir prácticamente cualquier función de puntuación; siempre que sea simétrica, el método garantiza matemáticamente el nivel de confianza objetivo (por ejemplo, 95\% de cobertura), sin importar si el modelo es excelente o deficiente.
+En problemas de regresión, la cobertura marginal por sí sola resulta insuficiente, ya que un intervalo excesivamente amplio e inflexible podría cumplirla de forma trivial perdiendo toda utilidad práctica. Idealmente, un intervalo de predicción debe reflejar la incertidumbre local de los datos, ensanchándose en zonas de alta varianza (heterocedasticidad) y estrechándose en regiones más estables. Según cómo se defina la puntuación de no conformidad, se obtienen distintos grados de adaptabilidad.
 
-    \item Impacto Práctico: La elección del score es lo mas importante. Aunque la validez estadística no cambia, un buen score optimiza el método generando intervalos de predicción pequeños, precisos y realmente útiles (eficientes).
-\end{itemize}
+La formulación más directa es la \textbf{puntuación por residuo absoluto}, definida como 
 
+\begin{equation}
+    s(x, y) = |y - \hat{f}(x)|.
+\end{equation}
 
-\textbf{Tipos comunes de funciones de puntuación}
+Al depender únicamente del error puntual sin ponderar la dispersión local, este criterio produce bandas de confianza de \textbf{ancho constante} alrededor de la predicción, dadas por $[\hat{f}(X_{n+1}) - \hat{q}, \, \hat{f}(X_{n+1}) + \hat{q}]$.
 
-\begin{itemize}
-    \item \textbf{Score de residuo absoluto:} Definido como $s(x, y) = |y - \hat{f}(x)|$. Produce bandas de confianza de \textbf{ancho constante} alrededor de la predicción puntual.
+Para superar esta rigidez cuando la varianza del ruido no es constante, se recurre a la \textbf{puntuación por residuo escalado}, que normaliza el error mediante una estimación local de la dispersión $\hat{\sigma}(x)$:
+\begin{equation}
+    s(x, y) = \frac{|y - \hat{f}(x)|}{\hat{\sigma}(x)}.
+\end{equation}
+De este modo, el intervalo de predicción resultante adapta su amplitud según la incertidumbre estimada en cada punto:
+\begin{equation}
+    \mathcal{C}(X_{n+1}) = \hat{f}(X_{n+1}) \pm \hat{q}\,\hat{\sigma}(X_{n+1}).
+\end{equation}
 
-    \item \textbf{Score de residuo escalado:} Se define como $s(x, y) = \frac{|y - \hat{f}(x)|}{ \hat{\sigma}(x)}$.
-    Permite que el ancho del intervalo se adapte según una estimación de la varianza del ruido $\hat{\sigma}$, siendo más útil cuando el ruido no es constante.
+Una alternativa aún más flexible es la \textbf{Regresión Cuantílica Conforme} (\textit{Conformalized Quantile Regression}, CQR), que parte de estimaciones iniciales de cuantiles condicionales $[\hat{\tau}(x; \alpha/2), \, \hat{\tau}(x; 1 - \alpha/2)]$ para medir la distancia con signo del valor real $y$ respecto a dicho intervalo:
+\begin{equation}
+    s(x, y) = \max \left\{ \hat{\tau}(x; \alpha/2) - y, \, y - \hat{\tau}(x; 1 - \alpha/2) \right\}.
+\end{equation}
+Un valor positivo de $s(x,y)$ indica que el dato real quedó por fuera del intervalo estimado, mientras que un valor negativo señala que cayó en su interior. Tras calibrar el cuantil empírico $\hat{q}$ sobre estas puntuaciones, el conjunto de predicción final se obtiene ajustando ambos extremos del intervalo inicial:
+\begin{equation}
+    \mathcal{C}(X_{n+1}) = \left[ \hat{\tau}(X_{n+1}; \alpha/2) - \hat{q}, \, \hat{\tau}(X_{n+1}; 1 - \alpha/2) + \hat{q} \right].
+\end{equation}
+Este enfoque no paramétrico permite construir \textbf{intervalos asimétricos y adaptativos} a la distribución local de los datos sin asumir simetría en los residuos.
 
+\subsection{Funciones de puntuación en clasificación}
 
-    EL resultado de la predecicción será:
+En problemas de clasificación, donde la variable respuesta toma valores en un conjunto discreto de etiquetas $\mathcal{Y} = \{1, \dots, K\}$, el modelo suele proporcionar una distribución de probabilidad condicional estimada $\hat{\pi}(y \mid x)$. A partir de ella, una elección habitual es la \textbf{puntuación de alta probabilidad}, definida como el negativo de la probabilidad asignada a la clase verdadera:
+\begin{equation}
+    s(x, y) = -\hat{\pi}(y \mid x).
+\end{equation}
+El signo negativo asegura la convención fundamental del marco conforme: las observaciones más improbables reciben puntuaciones más altas (más cercanas a cero).
 
-    $$
-    \mathcal{C}(X_{n+1}) = \hat{f}(X_{n+1}) \pm \hat{q} . \hat{\sigma} (X_{n+1})
-    $$
-
-    \item \textbf{Score CQR (Conformalized Quantile Regression):}
-    Utiliza estimaciones iniciales de cuantiles para medir la \textbf{distancia con signo} (o distancia algebraica) del valor real $y$ al intervalo condicional estimado $[\hat{\tau}(x; \alpha/2), \hat{\tau}(x; 1 - \alpha/2)]$. Es un enfoque no paramétrico que permite obtener \textbf{intervalos asimétricos y adaptativos} a la distribución local de los datos.
-
-    El score conforme para cada punto se define como:
-    $$
-    s(x, y) = \max \left\{ \hat{\tau}(x; \alpha/2) - y, \, y - \hat{\tau}(x; 1 - \alpha/2) \right\}
-    $$
-    Un valor positivo de $s(x,y)$ indica que el dato real quedó fuera del intervalo de los cuantiles estimados, mientras que un valor negativo indica que cayó dentro.
-
-    A partir de la calibración de este score, el conjunto de predicción final para un nuevo punto de prueba $X_{n+1}$ se ajustando el intervalo inicial mediante el cuantil empírico corregido $\hat{q}$:
-    $$C(X_{n+1}) = \left[ \hat{\tau}(X_{n+1}; \alpha/2) - \hat{q}, \, \hat{\tau}(X_{n+1}; 1 - \alpha/2) + \hat{q} \right]$$
-
-    \item \textbf{Score de Alta Probabilidad (High-Probability Score):}
-    Se utiliza en problemas de clasificación donde la variable de respuesta toma valores en un conjunto discreto de etiquetas $\{1, \dots, K\}$. A partir de un modelo que estima la probabilidad condicional $\hat{\pi}(y \mid x)$, el score de inconformidad se define como el negativo de dicha probabilidad:
-    $$s(x, y) = -\hat{\pi}(y \mid x)$$
-    El signo negativo asegura la propiedad fundamental de Conformal Prediction: el score devuelve valores más altos (más cercanos a cero) cuando el punto de datos $(x, y)$ es más improbable.
-
-    Tras calcular el cuantil de calibración $\hat{q}$, el conjunto de predicción final $C(X_{n+1})$ para un nuevo dato de prueba incluye a todas las etiquetas que posean una probabilidad estimada lo suficientemente alta:
-    $$C(X_{n+1}) = \{y : \hat{\pi}(y \mid X_{n+1}) \ge -\hat{q}\} \subseteq \{ 1, \dots K \} $$
-
-    La forma general es decir que $t^*(x) = -\hat{q}$ un umbral de decisión.
-
-    %\item \textbf{Score de probabilidad acumulativa:}
-    %También llamado score adaptativo, agrupa clases sumando sus probabilidades hasta alcanzar un umbral, lo que ayuda a aproximar la cobertura condicional en clasificación.
-
-\end{itemize}
-
+Una vez calculado el umbral de calibración $\hat{q}$, el conjunto de predicción $\mathcal{C}(X_{n+1})$ para una nueva entrada incorpora todas las etiquetas cuya probabilidad estimada supere dicho nivel de corte:
+\begin{equation}
+    \mathcal{C}(X_{n+1}) = \{y \in \mathcal{Y} : \hat{\pi}(y \mid X_{n+1}) \ge -\hat{q}\}.
+\end{equation}
+De forma equivalente, el valor $t^* = -\hat{q}$ opera como un umbral de decisión calibrado sobre las salidas probabilísticas del clasificador.
 
 \begin{figure}[H]
     \centering
     \resizebox{1.0\textwidth}{!}{\input{img_tex/diagrama_reg_clf}}
-    \caption{Comparativa de métodos de Conformal Prediction: Enfoques continuos para Regresión (arriba) y selección por umbral de probabilidad para Clasificación (abajo).}
+    \caption{Comparativa de métodos base de Predicción Conforme: enfoques continuos para regresión (arriba) y selección por umbral de probabilidad para clasificación (abajo).}
     \label{fig:conformal_full_panel}
 \end{figure}
 
-
-En la \ref{fig:conformal_full_panel} se puede ver las tecnicas bases de conformal prediction de las que se parten para generar tecnicas de cuantificación de incertidumbre mas elavoradas que se adaptan a las distintas necesidades.
-
-
-En problemas de regresión, la cobertura marginal es una garantía que el marco de \textit{Conformal Prediction} otorga de manera inherente.
-
-Sin embargo, la cobertura por sí sola resulta insuficiente, ya que un intervalo excesivamente amplio e inflexible podría cumplirla de forma trivial perdiendo toda utilidad práctica. Idealmente, un conjunto de predicción es verdaderamente informativo cuando es capaz de reflejar la incertidumbre local de los datos, volviéndose más amplio en zonas de alta varianza (heterocedasticidad) y más estrecho en regiones más estables.
-En la literatura del método, a esta cualidad de minimizar el tamaño o amplitud del conjunto de predicción (tanto en regresión como en clasificación), manteniendo strictly el nivel de cobertura deseado, se la conoce como \textbf{eficiencia}.
+En la Figura~\ref{fig:conformal_full_panel} se resumen estas técnicas base de Predicción Conforme, a partir de las cuales se desarrollan formulaciones más elaboradas para adaptarse a las particularidades de cada dominio.
 
 
-\section{Segmentación Semántica Conforme y Control de Riesgo}
 
-Se quiere aplicar \textit{Conformal Prediction} a segmentación semántica.
+\section{Control de Riesgo Conforme}
 
-En lugar de predecir una única etiqueta por imagen o un intervalo continuo, el objetivo en segmentación conforme consiste en generar un conjunto de etiquetas válidas para cada píxel individual de forma simultánea, controlando rigurosamente la tasa de error global sobre toda la estructura de la imagen.
+En problemas con salidas estructuradas o de alta dimensión, como la clasificación multietiqueta, la detección de objetos o la predicción densa sobre grillas espaciales, exigir una cobertura marginal estricta sobre la totalidad de la salida simultáneamente suele resultar demasiado restrictivo y conduce a conjuntos de predicción poco informativos. Para superar esta limitación, el \textbf{Control de Riesgo Conforme} (\textit{Conformal Risk Control}, CRC) extiende el marco de la Predicción Conforme permitiendo controlar el valor esperado de una función de pérdida general $\ell$ en lugar de limitarse únicamente a la probabilidad de error binario. De hecho, CRC constituye una generalización directa de la Predicción Conforme: si se define la pérdida como la función indicadora de falta de cobertura $\ell(\mathcal{C}(X), Y) = \mathbb{I}\{Y \notin \mathcal{C}(X)\}$, la cota sobre el riesgo esperado $\mathbb{E}[\ell(\mathcal{C}(X), Y)] \leq \alpha$ recupera exactamente la garantía clásica de cobertura marginal $\mathbb{P}(Y \in \mathcal{C}(X)) \geq 1 - \alpha$.
 
-Esto ultimo sugiere usar el framework de \textbf{Control de riesgo conforme} el cual será brevemente explicado en la \ref{fig:crc_optimization_flow}
+Para operar dentro de este esquema general, se construye una familia de conjuntos de predicción $\mathcal{C}_\lambda(X)$ indexada por un parámetro escalar $\lambda$, de manera tal que al incrementar $\lambda$ los conjuntos se expandan de forma anidada y la pérdida asociada disminuya monotónicamente. Bajo el mismo supuesto de intercambiabilidad entre las muestras de calibración y el dato de prueba, CRC permite estimar un umbral óptimo $\hat{\lambda}$ a partir de un conjunto de calibración finito que garantiza matemáticamente que el riesgo esperado en futuras observaciones no exceda el nivel de tolerancia $\alpha \in (0,1)$ fijado por el usuario.
+
+\subsection{Parametrización de conjuntos predictivos y clasificación LAC}
+
+Para construir conjuntos de predicción parametrizados a partir de un modelo probabilístico previamente entrenado, se adopta la estrategia del clasificador basado en el conjunto menos ambiguo (\textit{Least Ambiguous Set-Valued Classifier}, LAC). Dado un predictor que produce estimaciones de probabilidad normalizadas (por ejemplo, salidas \textit{softmax}) denotadas por $\hat{f}_{ijk}(X)$, donde $(i,j)$ indexa la posición espacial o estructural dentro de la salida y $k$ representa cada clase del conjunto de etiquetas $\mathcal{Y} = \{1, \dots, K\}$, el conjunto de predicción conforme $\mathcal{C}_\lambda(X)_{ij}$ para cada posición se define incluyendo todas las clases cuya probabilidad estimada supere un umbral controlado por $\lambda \in [0,1]$:
+\begin{equation}
+    \mathcal{C}_\lambda(X)_{ij} = \{ k \in \mathcal{Y} : \hat{f}_{ijk}(X) \geq 1 - \lambda \}.
+\end{equation}
+
+El escalar $\lambda$ opera así como un mecanismo continuo de tolerancia. A medida que $\lambda$ aumenta, el umbral de corte $1-\lambda$ disminuye y el conjunto $\mathcal{C}_\lambda(X)_{ij}$ incorpora una mayor cantidad de clases candidatas para absorber la incertidumbre local del modelo. Esta construcción garantiza además la propiedad de anidamiento, es decir, si $\lambda \leq \lambda'$ entonces $\mathcal{C}_\lambda(X)_{ij} \subseteq \mathcal{C}_{\lambda'}(X)_{ij}$ para toda posición $(i,j)$, condición fundamental para asegurar que el error disminuya de forma monótona al aumentar el parámetro. En la práctica, cuando $\lambda$ toma valores muy pequeños, suele retenerse al menos la clase de mayor probabilidad estimada para evitar conjuntos vacíos.
+
+\subsection{Calibración del umbral de riesgo}
+
+Una vez definida la parametrización de los conjuntos $\mathcal{C}_\lambda(X)$, el objetivo de CRC consiste en determinar un valor $\hat{\lambda}$ tal que, ante una nueva observación de prueba $(X_{\text{test}}, Y_{\text{test}})$, el riesgo esperado bajo la función de pérdida elegida $\ell$ se mantenga acotado por el nivel $\alpha$:
+\begin{equation}
+    \mathbb{E}\big[ \ell(\mathcal{C}_{\hat{\lambda}}(X_{\text{test}}), Y_{\text{test}}) \big] \leq \alpha.
+\end{equation}
+
+Para estimar $\hat{\lambda}$ a partir de los datos, se evalúa primero el riesgo empírico $\hat{R}_n(\lambda)$ sobre un conjunto de calibración independiente compuesto por $n$ observaciones $\{(X_i, Y_i)\}_{i=1}^n$:
+\begin{equation}
+    \hat{R}_n(\lambda) = \frac{1}{n} \sum_{i=1}^n \ell\big(\mathcal{C}_\lambda(X_i), Y_i\big).
+\end{equation}
+Dado que $\hat{R}_n(\lambda)$ es una estimación empírica calculada sobre una muestra finita, elegir directamente el menor $\lambda$ que cumpla $\hat{R}_n(\lambda) \leq \alpha$ no basta para asegurar la cota teórica en datos nuevos. Asumiendo que la pérdida está acotada superiormente por una constante conocida $B$ (típicamente $B=1$) y es no creciente respecto de $\lambda$, se incorpora una corrección de muestra finita que define al estimador $\hat{\lambda}$ como el ínfimo del conjunto compatible:
+\begin{equation}
+    \hat{\lambda} = \inf \left\{ \lambda : \frac{n}{n+1} \hat{R}_n(\lambda) + \frac{B}{n+1} \leq \alpha \right\}.
+\end{equation}
+
+La dinámica de búsqueda de este umbral se ilustra en la Figura~\ref{fig:crc_optimization_flow}, donde el parámetro $\lambda$ cumple un rol análogo al del cuantil $\hat{q}$ en la Predicción Conforme por Partición.
 
 \begin{figure}[H]
     \centering
     \resizebox{1.0\textwidth}{!}{\input{img_tex/diagrama_crc}}
-    \caption{Dinámica de optimización en Conformal Risk Control (CRC). Muestra la convergencia monótona de la función de costo (riesgo empírico $\hat{R}_n (\lambda)$) hacia la cota estadística garantizada $\alpha$ conforme el tamaño de los conjuntos predictivos se expande; aquí $\lambda$ juega el papel de $q$ en Split Conformal Prediction (SCP).
-    \newline\newline
-    Para un $\lambda$ inicial (Estado A), se evalúa el riesgo $\hat{R}_n (\lambda)$ y se observa que no satisface la condición requerida, por lo que el algoritmo continúa la búsqueda incrementando su valor.
-    \newline\newline
-    En el Estado B, aunque sigue sin alcanzarse el umbral de seguridad, se evidencia cómo el costo decae consistentemente debido a la propiedad de monotonía decreciente de la función de riesgo.
-    \newline\newline
-    Finalmente, se converge al Estado C, donde se intersecta la cota de riesgo acotado por $\alpha$. Por diseño del ínfimo matemático, todos los valores de $\lambda \geq \hat{\lambda}$ cumplirán estrictamente con dicha condición de validez.}
+    \caption{Dinámica de optimización del umbral $\hat{\lambda}$ en Control de Riesgo Conforme (CRC).}
     \label{fig:crc_optimization_flow}
 \end{figure}
 
+Tal como se observa en la Figura~\ref{fig:crc_optimization_flow}, partiendo de un valor inicial de $\lambda$ (Estado A), el riesgo empírico ajustado sobre el conjunto de calibración supera el umbral tolerado $\alpha$, por lo que el procedimiento incrementa $\lambda$ para ampliar los conjuntos predictivos. En una etapa intermedia (Estado B), aunque todavía no se alcanza la cota de seguridad, el riesgo desciende de manera consistente gracias a la propiedad de monotonía decreciente de la pérdida. Finalmente, el algoritmo converge al punto de corte $\hat{\lambda}$ (Estado C), donde la curva intersecta el nivel permitido por $\alpha$. Por la definición del ínfimo matemático, todo valor $\lambda \geq \hat{\lambda}$ satisface estrictamente la garantía de control de riesgo en muestra finita.
 
+\subsection{Función de pérdida y métrica de eficiencia}
 
-\textbf{Estructura del Framework y Clasificación LAC}
+Para que la garantía de CRC sea válida, la función de pérdida de calibración $\ell$ debe estar acotada por $B$ y ser monótonamente no creciente a medida que los conjuntos de predicción se agrandan. En salidas estructuradas con múltiples posiciones, utilizar una pérdida estrictamente binaria que penalice con $1$ si al menos un único elemento queda fuera de su conjunto predicho resulta excesivamente severo, ya que obliga a seleccionar $\hat{\lambda}$ muy cercano a $1$ e incluir casi todas las clases en cada posición. En su lugar, resulta mucho más informativo emplear una penalización gradual denominada \textbf{pérdida por falta de cobertura}.
 
-Para abordar la incertidumbre a nivel de píxel, se adopta la estrategia del clasificador basado en el conjunto menos ambiguo (\textit{Least Ambiguous Set-Valued Classifier} o LAC) .
+Para formularla, se representa la referencia verdadera mediante un tensor binario $Y \in \{0,1\}^{H \times W \times K}$ (en codificación \textit{one-hot}), donde $Y_{ijk} = 1$ si la clase real en la posición $(i,j)$ es $k$ y $0$ en caso contrario. De este modo, la suma total $\sum_{i,j,k} Y_{ijk}$ coincide exactamente con la cantidad de elementos válidos etiquetados $n_{\text{pixels}}$. De forma análoga, la predicción conforme $\mathcal{C}_\lambda(X)$ induce un tensor binario $Z \in \{0,1\}^{H \times W \times K}$ definido por $Z_{ijk} = \mathbb{I}(k \in \mathcal{C}_\lambda(X)_{ij})$, que toma el valor $1$ si la clase $k$ fue incluida en el conjunto predicho para la posición $(i,j)$ y $0$ en caso contrario.
 
-Dado un modelo de segmentación previamente entrenado que genera puntuaciones \textit{softmax} denotadas por $\hat{f}_{ijk}(X)$ (donde $i,j$ indexan la posición espacial del píxel y $k$ representa la clase dentro del conjunto de etiquetas $\mathcal{Y}$), el conjunto de predicción conforme $C_\lambda(X)_{ij}$ para cada píxel se construye mediante la inclusión de todas las clases cuya probabilidad estimada supere un umbral parametrizado por $\lambda$:
-
+Bajo esta notación, el producto $Z_{ijk} Y_{ijk}$ vale $1$ si y solo si la clase verdadera $k$ de la posición $(i,j)$ quedó contenida dentro del conjunto de predicción $\mathcal{C}_\lambda(X)_{ij}$. Al sumar estos aciertos sobre toda la estructura y dividir por el total de elementos válidos $\sum_{i,j,k} Y_{ijk}$, se obtiene la fracción empírica de posiciones correctamente cubiertas. Su complemento respecto de la unidad define entonces la proporción de elementos no cubiertos:
 \begin{equation}
-C_\lambda(X)_{ij} = \{ k \in \mathcal{Y} : \hat{f}_{ijk}(X) \geq 1 - \lambda \}
+    \ell(Z, Y) = 1 - \frac{\sum_{i,j,k} Z_{ijk} Y_{ijk}}{\sum_{i,j,k} Y_{ijk}}.
 \end{equation}
+Esta función toma valores en el intervalo $[0,1]$, por lo que verifica la cota superior $B = 1$, y disminuye de forma monótona al aumentar $\lambda$.
 
-El escalar $\lambda$ opera como un mecanismo de tolerancia: a mayor valor de $\lambda$, el umbral $1-\lambda$ disminuye, provocando que los conjuntos de predicción locales se vuelvan más inclusivos (cobertura más conservadora) para absorber la incertidumbre del modelo.
-
-\subsection{Conformal Risk Control (CRC) y Calibración}
-En tareas complejas como la segmentación, la noción estándar de cobertura marginal estricta suele ser restrictiva. En su lugar, se emplea el marco de \textit{Conformal Risk Control} (CRC), el cual generaliza el proceso garantizando que el riesgo esperado $\mathbb{E}[\cdot]$ de una función de pérdida arbitraria $\ell$ no exceda un nivel de error tolerado $\alpha \in (0,1)$ fijado por el usuario:
-
+Por otra parte, dado que la pérdida $\ell(Z,Y)$ podría reducirse trivialmente a cero incluyendo todas las $K$ clases en cada posición ($Z_{ijk} = 1$ para todo $k$), es necesario acompañar el control de riesgo con una métrica que evalúe la \textbf{eficiencia} de los conjuntos generados. Para una posición individual $(i,j)$, la suma $\sum_{k=1}^K Z_{ijk}$ contabiliza cuántas clases candidatas fueron activadas simultáneamente dentro de $\mathcal{C}_\lambda(X)_{ij}$. Al promediar esta cantidad sobre el total de elementos válidos $n_{\text{pixels}}$, se obtiene la \textbf{tasa de activación} ($\text{AR}$):
 \begin{equation}
-\mathbb{E}[ \ell(C_{\hat{\lambda}}(X_{\text{test}}), Y_{\text{test}}) ] \leq \alpha
+    \text{AR}(Z) = \frac{1}{n_{\text{pixels}}} \sum_{i,j,k} Z_{ijk}.
 \end{equation}
+Esta métrica cuantifica el tamaño medio de los conjuntos de predicción por posición. Un valor de $\text{AR}(Z)$ cercano a $1$ indica alta confianza del modelo, ya que el conjunto predicho se reduce prácticamente a una única clase por elemento, mientras que valores mayores reflejan un aumento en la incertidumbre local que obliga al método a retener múltiples etiquetas candidatas para sostener el nivel de riesgo $\alpha$ exigido. En el capítulo experimental, esta formulación general se aplicará directamente a tareas de segmentación semántica a nivel de píxel.
 
-Para hallar el parámetro óptimo $\hat{\lambda}$ que satisfaga de forma ajustada esta propiedad en datos no observados, se evalúa primero el riesgo empírico $\hat{R}_n(\lambda)$ sobre un conjunto de calibración independiente compuesto por $n$ imágenes:
 
-\begin{equation}
-\hat{R}_n(\lambda) = \frac{1}{n} \sum_{i=1}^n \ell(C_\lambda(X_i), Y_i)
-\end{equation}
 
-A partir de esta curva de riesgo empírico, y asumiendo una pérdida acotada por una constante $B$ (típicamente $B=1$), el principio de monotonicidad permite calcular de manera exacta el estimador $\hat{\lambda}$ como el límite inferior del conjunto compatible:
 
-\begin{equation}
-\hat{\lambda}
-=
-\inf \left \{ \lambda : \frac{n}{n+1} \hat{R}_n(\lambda) + \frac{B}{n+1} \leq \alpha \right \}
-\end{equation}
 
-\subsection{Función de Pérdida y Métrica de Eficiencia}
-La penalización del error se cuantifica a través de una función de pérdida por falta de cobertura (\textit{miscoverage loss}), definida como la proporción de píxeles donde la etiqueta verdadera $Y_{ijk}$ (en formato \textit{one-hot encoding}) no fue incluida en el conjunto predicho $Z_{ijk} = \mathbb{I}(k \in C_\lambda(X)_{ij})$:
 
-\begin{equation}
-\ell(Z, Y) = 1 - \frac{\sum_{ijk} Z_{ijk} Y_{ijk}}{\sum_{ijk} Y_{ijk}}
-\end{equation}
 
-Bajo esta formulación, maximizar la \textbf{eficiencia} del framework implica reducir el tamaño promedio de los conjuntos sin violar la restricción de riesgo. Dicha propiedad se monitorea mediante la tasa de activación (\textit{Activation Ratio}, AR), que calcula el promedio de clases activadas simultáneamente por píxel en la imagen:
 
-\begin{equation}
-AR(Z) = \frac{1}{n_{\text{pixels}}} \sum_{i,j,k} z_{ijk}
-\end{equation}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
